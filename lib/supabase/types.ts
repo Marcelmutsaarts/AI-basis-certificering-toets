@@ -49,6 +49,7 @@ export type Database = {
           created_at?: string;
           last_login_at?: string | null;
         };
+        Relationships: [];
       };
       exam_sessions: {
         Row: {
@@ -78,6 +79,7 @@ export type Database = {
           live_session_id?: string | null;
           casus_ids?: string[] | null;
         };
+        Relationships: [];
       };
       transcripts: {
         Row: {
@@ -107,6 +109,7 @@ export type Database = {
           ended_at?: string | null;
           sequence?: number;
         };
+        Relationships: [];
       };
       evaluations: {
         Row: {
@@ -148,6 +151,7 @@ export type Database = {
           passed?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       casuses: {
         Row: {
@@ -177,6 +181,7 @@ export type Database = {
           bloom_category?: string;
           active?: boolean;
         };
+        Relationships: [];
       };
       webhook_deliveries: {
         Row: {
@@ -209,6 +214,7 @@ export type Database = {
           sent_at?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
