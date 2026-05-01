@@ -5,13 +5,16 @@
  * /api/evaluate/[sessionId] doet en daarna router.refresh() draait om de
  * server component opnieuw te laten renderen met de nieuwe evaluatie.
  *
- * Toont een vriendelijke wachttekst en bij falen een retry-knop. De
- * server-route is idempotent dus retry is veilig.
+ * Toont een vriendelijke wachttekst die om de 10 seconden roteert,
+ * plus spinner. Bij falen: knop "Klik om opnieuw te proberen" en
+ * recovery-pad terug naar /start.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Spinner } from '@/components/ui/Spinner';
 
 export interface EvaluatorTriggerProps {
   sessionId: string;
@@ -19,15 +22,23 @@ export interface EvaluatorTriggerProps {
 
 type Status = 'idle' | 'pending' | 'error';
 
+const COPY_ROTATION = [
+  'We beoordelen je antwoorden, dit duurt ongeveer 30 seconden.',
+  'Even geduld, we wegen je domeinen.',
+  'Bijna klaar, we schrijven je samenvatting.',
+];
+
 export function EvaluatorTrigger({ sessionId }: EvaluatorTriggerProps) {
   const router = useRouter();
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [copyIndex, setCopyIndex] = useState(0);
   const triggeredRef = useRef(false);
 
   const trigger = useCallback(async () => {
     setStatus('pending');
     setErrorMsg(null);
+    setCopyIndex(0);
     try {
       const res = await fetch(`/api/evaluate/${sessionId}`, { method: 'POST' });
       if (!res.ok) {
@@ -52,29 +63,39 @@ export function EvaluatorTrigger({ sessionId }: EvaluatorTriggerProps) {
     void trigger();
   }, [trigger]);
 
+  useEffect(() => {
+    if (status !== 'pending') return;
+    const id = window.setInterval(() => {
+      setCopyIndex((prev) => Math.min(prev + 1, COPY_ROTATION.length - 1));
+    }, 10_000);
+    return () => window.clearInterval(id);
+  }, [status]);
+
   return (
     <Card padding="lg">
       <div className="flex flex-col items-center gap-4 text-center">
         {status === 'error' ? (
           <ErrorView errorMsg={errorMsg} onRetry={trigger} />
         ) : (
-          <PendingView />
+          <PendingView copy={COPY_ROTATION[copyIndex]} />
         )}
       </div>
     </Card>
   );
 }
 
-function PendingView() {
+function PendingView({ copy }: { copy: string }) {
   return (
     <>
-      <Spinner />
-      <h2 className="text-lg font-semibold text-purple-dark">
+      <Spinner size="md" label="Bezig met beoordelen" />
+      <h2 className="text-base md:text-lg font-semibold text-purple-dark">
         Bezig met beoordelen
       </h2>
-      <p className="text-sm text-text-body max-w-md">
-        Lieke neemt je antwoorden door en stelt je rubric samen. Dit duurt
-        ongeveer 30 seconden. Sluit dit scherm niet.
+      <p className="text-sm text-text-body max-w-md transition-opacity duration-300">
+        {copy}
+      </p>
+      <p className="text-xs text-text-body/70 max-w-md">
+        Sluit dit scherm niet.
       </p>
     </>
   );
@@ -89,25 +110,28 @@ function ErrorView({
 }) {
   return (
     <>
-      <h2 className="text-lg font-semibold text-red-700">
+      <h2 className="text-base md:text-lg font-semibold text-red-700">
         Beoordelen niet gelukt
       </h2>
       <p className="text-sm text-text-body max-w-md">
         {errorMsg ?? 'Er ging iets mis bij het beoordelen.'}
       </p>
-      <Button variant="primary" size="md" onClick={onRetry}>
-        Opnieuw proberen
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+        <Button
+          variant="primary"
+          size="md"
+          onClick={onRetry}
+          className="min-h-[44px]"
+        >
+          Klik om opnieuw te proberen
+        </Button>
+        <Link
+          href="/start"
+          className="inline-flex items-center justify-center font-semibold rounded-xl px-6 py-3 text-base text-purple-dark hover:bg-purple-light-bg transition-colors min-h-[44px]"
+        >
+          Terug naar startscherm
+        </Link>
+      </div>
     </>
-  );
-}
-
-function Spinner() {
-  return (
-    <span
-      role="status"
-      aria-label="Bezig"
-      className="inline-block w-10 h-10 rounded-full border-4 border-purple-light-bg border-t-purple-primary animate-spin"
-    />
   );
 }

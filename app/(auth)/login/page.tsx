@@ -52,10 +52,10 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-12 bg-purple-light-bg">
+    <main className="min-h-screen flex items-center justify-center px-4 md:px-12 py-8 md:py-12 bg-purple-light-bg">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-semibold text-purple-dark">
+          <h1 className="text-xl md:text-2xl font-semibold text-purple-dark">
             AI voor Docenten
           </h1>
           <p className="text-sm text-text-body mt-1">
@@ -64,7 +64,9 @@ export default function LoginPage() {
         </div>
         <Card>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-            <h2 className="text-lg font-semibold text-text-body">Inloggen</h2>
+            <h2 className="text-base md:text-lg font-semibold text-text-body">
+              Inloggen
+            </h2>
 
             {error ? (
               <div
@@ -98,7 +100,12 @@ export default function LoginPage() {
               />
             </label>
 
-            <Button type="submit" size="lg" disabled={pending} className="mt-2">
+            <Button
+              type="submit"
+              size="lg"
+              disabled={pending}
+              className="mt-2 min-h-[44px]"
+            >
               {pending ? 'Bezig met inloggen' : 'Inloggen'}
             </Button>
           </form>

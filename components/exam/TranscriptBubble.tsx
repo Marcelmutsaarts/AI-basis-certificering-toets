@@ -19,7 +19,7 @@ export function TranscriptBubble({ speaker, text, finished }: TranscriptBubblePr
   return (
     <div className={`flex ${wrapperAlign}`}>
       <div
-        className={`max-w-[80%] px-4 py-3 text-sm leading-relaxed shadow-sm ${bubbleClass}`}
+        className={`max-w-[75%] md:max-w-[60%] px-4 py-3 text-sm leading-relaxed shadow-sm ${bubbleClass}`}
         aria-live={finished ? 'polite' : 'off'}
       >
         <span className="block whitespace-pre-wrap">{text}</span>

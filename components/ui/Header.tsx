@@ -23,7 +23,7 @@ export async function Header() {
 
   return (
     <header className="w-full bg-white border-b border-purple-light-bg">
-      <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"

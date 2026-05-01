@@ -1,89 +1,51 @@
 'use client';
 
 /**
- * Orkestreert het examen-scherm. Haalt de ephemeral token op, opent de
- * Live API verbinding, voedt transcript-events naar de transcript-state
- * en de progress-tracker, en sluit de sessie netjes af.
+ * Orkestreert het examen-scherm. Verbindings- en retry-logica zit in
+ * useExamConnection. Dit bestand levert de UI-states:
+ *  - Connecting / retrying paneel.
+ *  - Error-paneel met onderscheid mic-denied / live-lost / generic.
+ *  - Hoofd-card met visualizer + mic-knop zodra verbonden.
+ *  - Live transcript onderaan.
+ *  - Recovery: Sessie afbreken (status `abandoned`), terug naar /start.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { useLiveSession, type TranscriptEvent } from '@/hooks/useLiveSession';
 import { useTranscript } from '@/hooks/useTranscript';
 import { useExamProgress, type ExamCasus } from '@/hooks/useExamProgress';
-import { AudioVisualizer, type SpeakerState } from './AudioVisualizer';
+import { useExamConnection } from '@/hooks/useExamConnection';
+import { type SpeakerState } from './AudioVisualizer';
 import { LiveTranscript } from './LiveTranscript';
 import { ProgressDots } from './ProgressDots';
-import { MicButton } from './MicButton';
+import { ConnectingPanel } from './ConnectingPanel';
+import { ExamErrorPanel, classifyExamError } from './ExamErrorPanel';
+import { ExamMainCard } from './ExamMainCard';
 
 export interface ExamScreenProps {
   examSessionId: string;
   casussen: ExamCasus[];
 }
 
-interface TokenResponse {
-  token: string;
-  model: string;
-  config: import('@/lib/live-api/session-config').LiveConfig;
-}
-
 export function ExamScreen({ examSessionId, casussen }: ExamScreenProps) {
   const router = useRouter();
   const [muted, setMuted] = useState(false);
   const [speaker, setSpeaker] = useState<SpeakerState>(null);
-  const [bootError, setBootError] = useState<string | null>(null);
   const [ending, setEnding] = useState(false);
-  const startedRef = useRef(false);
 
   const transcript = useTranscript({ examSessionId });
   const progress = useExamProgress(casussen, transcript.bubbles);
 
-  const handleTranscript = useCallback(
-    (event: TranscriptEvent) => {
-      transcript.ingestEvent(event);
-    },
-    [transcript]
-  );
-
-  const live = useLiveSession({
-    onTranscript: handleTranscript,
+  const conn = useExamConnection({
+    examSessionId,
+    onTranscript: transcript.ingestEvent,
     onSpeaker: setSpeaker,
   });
-
-  useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-    void boot();
-
-    async function boot() {
-      try {
-        const res = await fetch('/api/live-session/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ examSessionId }),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error ?? 'Token ophalen mislukt.');
-        }
-        const data = (await res.json()) as TokenResponse;
-        await live.start({
-          token: data.token,
-          config: data.config,
-          model: data.model,
-        });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Onbekende fout';
-        setBootError(msg);
-      }
-    }
-  }, [examSessionId, live]);
 
   const finishExam = useCallback(
     async (status: 'completed' | 'abandoned') => {
       transcript.flushAll();
-      live.stop();
+      conn.stop();
       try {
         await fetch('/api/exam-session/end', {
           method: 'POST',
@@ -94,7 +56,7 @@ export function ExamScreen({ examSessionId, casussen }: ExamScreenProps) {
         console.error('Sessie afsluiten mislukt', err);
       }
     },
-    [examSessionId, live, transcript]
+    [examSessionId, conn, transcript]
   );
 
   useEffect(() => {
@@ -115,77 +77,67 @@ export function ExamScreen({ examSessionId, casussen }: ExamScreenProps) {
     router.push(`/resultaat/${examSessionId}`);
   }
 
-  const errorMessage = bootError ?? live.errorMessage;
+  async function handleAbort() {
+    setEnding(true);
+    await finishExam('abandoned');
+    router.push('/start');
+  }
+
+  const errKind = classifyExamError(conn.errorMessage);
+  const showError =
+    Boolean(conn.errorMessage) && conn.status === 'error' && !conn.retrying;
+  const showConnecting =
+    !showError &&
+    (conn.retrying || conn.status === 'idle' || conn.status === 'connecting');
+
   const totalDots = useMemo(() => casussen.length, [casussen.length]);
 
   return (
-    <main className="flex-1 px-4 py-6">
-      <div className="mx-auto w-full max-w-2xl flex flex-col gap-6">
+    <main className="flex-1 px-4 md:px-12 py-4 md:py-6">
+      <div className="mx-auto w-full max-w-2xl flex flex-col gap-5 md:gap-6 min-h-[calc(100vh-6rem)] md:min-h-0">
         <ProgressDots total={totalDots} currentIndex={progress.currentIndex} />
 
-        <Card padding="md">
-          <div className="flex flex-col items-center gap-5">
-            <AudioVisualizer speaker={speaker} />
-            <div className="flex items-center gap-4">
-              <MicButton
-                muted={muted}
-                onToggle={() => {
-                  const next = !muted;
-                  setMuted(next);
-                  live.setMuted(next);
-                }}
-                disabled={live.status !== 'connected'}
-              />
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={handleStop}
-                disabled={ending}
-              >
-                {ending ? 'Bezig met afronden' : 'Examen afronden'}
-              </Button>
-            </div>
-            <StatusLine status={live.status} bootError={bootError} />
-          </div>
-        </Card>
+        {showError ? (
+          <ExamErrorPanel
+            kind={errKind}
+            message={conn.errorMessage}
+            onRetry={conn.manualRetry}
+            onAbort={handleAbort}
+            retrying={conn.retrying}
+          />
+        ) : showConnecting ? (
+          <ConnectingPanel
+            message={
+              conn.retrying
+                ? 'Opnieuw verbinden met Lieke...'
+                : 'Verbinden met Lieke...'
+            }
+          />
+        ) : (
+          <ExamMainCard
+            speaker={speaker}
+            muted={muted}
+            ending={ending}
+            connected={conn.status === 'connected'}
+            onToggleMute={() => {
+              const next = !muted;
+              setMuted(next);
+              conn.setMuted(next);
+            }}
+            onStop={handleStop}
+            onAbort={handleAbort}
+          />
+        )}
 
-        <Card padding="md">
-          <h2 className="text-sm font-semibold text-purple-dark mb-2">
-            Live transcript
-          </h2>
-          <LiveTranscript bubbles={transcript.bubbles} />
-        </Card>
-
-        {errorMessage ? (
-          <div
-            role="alert"
-            className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
-          >
-            {errorMessage}
-          </div>
+        {!showError ? (
+          <Card padding="md">
+            <h2 className="text-sm font-semibold text-purple-dark mb-2">
+              Live transcript
+            </h2>
+            <LiveTranscript bubbles={transcript.bubbles} />
+          </Card>
         ) : null}
       </div>
     </main>
   );
-}
-
-function StatusLine({
-  status,
-  bootError,
-}: {
-  status: ReturnType<typeof useLiveSession>['status'];
-  bootError: string | null;
-}) {
-  if (bootError) return null;
-  const text = statusText(status);
-  if (!text) return null;
-  return <p className="text-xs text-text-body/70">{text}</p>;
-}
-
-function statusText(status: ReturnType<typeof useLiveSession>['status']): string {
-  if (status === 'idle' || status === 'connecting') return 'Verbinding maken met Lieke';
-  if (status === 'connected') return 'Verbonden met Lieke';
-  if (status === 'ended') return 'Sessie afgerond';
-  if (status === 'error') return 'Verbinding mislukt';
-  return '';
 }

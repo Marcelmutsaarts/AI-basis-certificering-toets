@@ -10,9 +10,11 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
+import { DotsPattern } from '@/components/ui/DotsPattern';
 import { PassFailHeader } from '@/components/result/PassFailHeader';
 import { DomainList } from '@/components/result/DomainList';
 import { EvaluatorTrigger } from '@/components/result/EvaluatorTrigger';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import {
   EvaluatorOutputSchema,
   type EvaluatorOutput,
@@ -50,9 +52,12 @@ export default async function ResultaatPage({ params }: PageProps) {
 
   if (!evaluation) {
     return (
-      <main className="flex-1 flex items-start justify-center px-4 py-10">
-        <div className="w-full max-w-2xl">
-          <EvaluatorTrigger sessionId={sessionId} />
+      <main className="relative flex-1 flex items-start justify-center px-4 md:px-12 py-8 md:py-12 overflow-hidden">
+        <DotsPattern position="right" />
+        <div className="relative z-10 w-full max-w-2xl">
+          <ErrorBoundary>
+            <EvaluatorTrigger sessionId={sessionId} />
+          </ErrorBoundary>
         </div>
       </main>
     );
@@ -75,11 +80,12 @@ function ResultBody({
   sessionId: string;
 }) {
   return (
-    <main className="flex-1 px-4 py-10">
-      <div className="mx-auto w-full max-w-2xl flex flex-col gap-6">
+    <main className="relative flex-1 px-4 md:px-12 py-8 md:py-12 overflow-hidden">
+      <DotsPattern position="right" />
+      <div className="relative z-10 mx-auto w-full max-w-2xl flex flex-col gap-5 md:gap-6">
         <PassFailHeader passed={output.passed} />
         <Card padding="md">
-          <h2 className="text-lg font-semibold text-purple-dark mb-3">
+          <h2 className="text-base md:text-lg font-semibold text-purple-dark mb-3">
             Samenvatting
           </h2>
           <p className="text-sm leading-relaxed text-text-body whitespace-pre-wrap">
@@ -91,19 +97,25 @@ function ResultBody({
           <DomainList domeinen={output.domeinen} />
         </section>
         <Card padding="md">
-          <h2 className="text-lg font-semibold text-purple-dark mb-3">
+          <h2 className="text-base md:text-lg font-semibold text-purple-dark mb-3">
             Ontwikkeladvies
           </h2>
           <p className="text-sm leading-relaxed text-text-body whitespace-pre-wrap">
             {output.ontwikkeladvies}
           </p>
         </Card>
-        <div className="flex justify-center pt-2">
+        <div className="flex flex-col sm:flex-row sm:justify-center gap-3 pt-2">
           <Link
             href={`/transcript/${sessionId}`}
-            className="inline-flex items-center justify-center font-semibold rounded-xl px-6 py-3 text-base bg-white text-purple-dark border border-purple-primary hover:bg-purple-light-bg transition-colors"
+            className="inline-flex items-center justify-center font-semibold rounded-xl px-6 py-3 text-base bg-white text-purple-dark border border-purple-primary hover:bg-purple-light-bg transition-colors min-h-[44px]"
           >
             Bekijk volledig transcript
+          </Link>
+          <Link
+            href="/start"
+            className="inline-flex items-center justify-center font-semibold rounded-xl px-6 py-3 text-base text-purple-dark hover:bg-white transition-colors min-h-[44px]"
+          >
+            Terug naar startscherm
           </Link>
         </div>
       </div>
@@ -125,10 +137,18 @@ function RenderFallbackError() {
   return (
     <main className="flex-1 flex items-center justify-center px-4 py-10">
       <Card>
-        <p className="text-text-body">
-          Er ging iets mis met de beoordeling. Neem contact op met de
-          examencommissie.
-        </p>
+        <div className="flex flex-col gap-3">
+          <p className="text-text-body">
+            Er ging iets mis met de beoordeling. Neem contact op met de
+            examencommissie.
+          </p>
+          <Link
+            href="/start"
+            className="inline-flex items-center justify-center font-semibold rounded-xl px-6 py-3 text-base bg-purple-primary text-white hover:bg-purple-dark transition-colors min-h-[44px] self-start"
+          >
+            Terug naar startscherm
+          </Link>
+        </div>
       </Card>
     </main>
   );

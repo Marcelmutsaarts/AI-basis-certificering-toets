@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { pickCasussen, type PickedCasus } from '@/lib/bot/casuspool';
 import { ExamScreen } from '@/components/exam/ExamScreen';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import type { ExamCasus } from '@/hooks/useExamProgress';
 
 interface PreparedSession {
@@ -87,5 +88,9 @@ async function loadCasussenByIds(
 
 export default async function ExamenPage() {
   const { examSessionId, casussen } = await ensureSession();
-  return <ExamScreen examSessionId={examSessionId} casussen={casussen} />;
+  return (
+    <ErrorBoundary>
+      <ExamScreen examSessionId={examSessionId} casussen={casussen} />
+    </ErrorBoundary>
+  );
 }
