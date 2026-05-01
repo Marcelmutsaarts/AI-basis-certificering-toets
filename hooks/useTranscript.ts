@@ -77,8 +77,32 @@ export function useTranscript({ examSessionId }: UseTranscriptOptions) {
     []
   );
 
+  const finalizeOther = useCallback(
+    (currentSpeaker: 'bot' | 'docent') => {
+      const otherSpeaker: 'bot' | 'docent' =
+        currentSpeaker === 'bot' ? 'docent' : 'bot';
+      const otherActive = activeRef.current[otherSpeaker];
+      if (!otherActive) return;
+      const finishedBubble: TranscriptBubble = {
+        id: otherActive.id,
+        speaker: otherSpeaker,
+        text: otherActive.fullText,
+        startedAt: otherActive.startedAt,
+        finished: true,
+        sequence: otherActive.sequence,
+      };
+      activeRef.current[otherSpeaker] = null;
+      updateBubble(otherActive.id, () => finishedBubble);
+      void persistBubble(finishedBubble);
+    },
+    [persistBubble, updateBubble]
+  );
+
   const upsert = useCallback(
     (event: TranscriptEvent) => {
+      // Speaker-wissel: sluit vorige bubble van de andere spreker af zodat
+      // de chat alterneert in plaats van twee groeiende blokken te tonen.
+      finalizeOther(event.speaker);
       const active = activeRef.current[event.speaker];
       if (!active) {
         const id = `${event.speaker}-${sequenceRef.current}`;
@@ -135,7 +159,7 @@ export function useTranscript({ examSessionId }: UseTranscriptOptions) {
         void persistBubble(finishedBubble);
       }
     },
-    [persistBubble, updateBubble]
+    [finalizeOther, persistBubble, updateBubble]
   );
 
   const flushAll = useCallback(() => {

@@ -37,7 +37,7 @@ export function LiveTranscript({ bubbles }: LiveTranscriptProps) {
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="flex flex-col gap-3 max-h-72 overflow-y-auto px-1 py-2"
+      className="flex flex-col gap-3 h-full overflow-y-auto px-1 py-2"
     >
       {bubbles.length === 0 ? (
         <p className="text-sm text-text-body/70 text-center">

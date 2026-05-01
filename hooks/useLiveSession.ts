@@ -14,7 +14,6 @@ import {
 import { encodePcmChunk } from '@/lib/live-api/audio/encode';
 import { LivePlayer } from '@/lib/live-api/audio/player';
 import { LiveRecorder } from '@/lib/live-api/audio/recorder';
-import type { LiveConfig } from '@/lib/live-api/session-config';
 
 export type LiveStatus =
   | 'idle'
@@ -37,9 +36,12 @@ export interface UseLiveSessionOptions {
 
 export interface StartParams {
   token: string;
-  config: LiveConfig;
   model: string;
 }
+
+const SETUP_TIMEOUT_MS = 10_000;
+const INITIAL_GREETING_PROMPT =
+  'De docent is aanwezig. Begin het examen met je welkomstwoord.';
 
 export function useLiveSession(options: UseLiveSessionOptions = {}) {
   const [status, setStatus] = useState<LiveStatus>('idle');
@@ -99,7 +101,7 @@ export function useLiveSession(options: UseLiveSessionOptions = {}) {
   }, []);
 
   const start = useCallback(
-    async ({ token, config, model }: StartParams) => {
+    async ({ token, model }: StartParams) => {
       if (sessionRef.current) return;
       setStatus('connecting');
       setErrorMessage(null);
@@ -108,35 +110,98 @@ export function useLiveSession(options: UseLiveSessionOptions = {}) {
         const ai = new GoogleGenAI({
           apiKey: token,
           apiVersion: 'v1alpha',
+          httpOptions: { apiVersion: 'v1alpha' },
         } as ConstructorParameters<typeof GoogleGenAI>[0]);
 
         const player = new LivePlayer();
         playerRef.current = player;
         await player.init();
 
+        let setupComplete = false;
+        let resolveSetup: () => void = () => undefined;
+        let rejectSetup: (reason: Error) => void = () => undefined;
+        const setupReady = new Promise<void>((resolve, reject) => {
+          resolveSetup = resolve;
+          rejectSetup = reject;
+        });
+        const setupTimer = window.setTimeout(() => {
+          rejectSetup(new Error('Live API setup duurde te lang.'));
+        }, SETUP_TIMEOUT_MS);
+
+        console.info('[live] connecting model=', model);
         const session = await ai.live.connect({
           model,
-          config: config as never,
           callbacks: {
-            onopen: () => setStatus('connected'),
-            onmessage: handleMessage,
+            onopen: () => {
+              console.info('[live] websocket open');
+            },
+            onmessage: (message) => {
+              if (message.setupComplete && !setupComplete) {
+                setupComplete = true;
+                window.clearTimeout(setupTimer);
+                console.info('[live] setup complete');
+                resolveSetup();
+              }
+              handleMessage(message);
+            },
             onerror: (event) => {
-              const msg =
-                (event as ErrorEvent).message ?? 'Live API verbinding mislukt';
+              const evt = event as ErrorEvent;
+              const msg = evt.message ?? 'Live API verbinding mislukt';
+              console.error('[live] onerror', { message: msg, event });
               setErrorMessage(msg);
               setStatus('error');
+              rejectSetup(new Error(msg));
             },
-            onclose: () => setStatus((prev) => (prev === 'error' ? prev : 'ended')),
+            onclose: (event) => {
+              const ce = event as CloseEvent;
+              window.clearTimeout(setupTimer);
+              recorderRef.current?.stop();
+              recorderRef.current = null;
+              sessionRef.current = null;
+              callbacksRef.current.onSpeaker?.(null);
+              console.warn(
+                `[live] onclose code=${ce?.code} clean=${ce?.wasClean} reason=${JSON.stringify(ce?.reason)}`
+              );
+              const reason = ce?.reason
+                ? `Live API sloot de sessie: ${ce.reason}`
+                : 'Live API verbinding gesloten.';
+              if (!setupComplete) {
+                setErrorMessage(reason);
+                setStatus('error');
+                rejectSetup(new Error(reason));
+                return;
+              }
+              setStatus((prev) => (prev === 'error' ? prev : 'ended'));
+            },
           },
         });
         sessionRef.current = session;
+        await setupReady;
+        setStatus('connected');
+
+        // Realtime tekst hoort bij dezelfde VAD/realtime-input stroom als audio.
+        // `clientContent` vóór microfoon-audio blijkt op deze preview endpoint
+        // niet betrouwbaar een audio-turn te starten.
+        try {
+          session.sendRealtimeInput({ text: INITIAL_GREETING_PROMPT });
+        } catch (triggerErr) {
+          console.warn('[live] kon initial trigger niet sturen', triggerErr);
+        }
 
         const recorder = new LiveRecorder({
           onChunk: (pcm) => {
+            if (!sessionRef.current) return;
             const encoded = encodePcmChunk(pcm);
-            session.sendRealtimeInput({
-              audio: { data: encoded, mimeType: 'audio/pcm;rate=16000' },
-            });
+            try {
+              sessionRef.current.sendRealtimeInput({
+                audio: { data: encoded, mimeType: 'audio/pcm;rate=16000' },
+              });
+            } catch (sendErr) {
+              // WS dicht: stop de recorder zodat we niet eindeloos blijven loggen.
+              recorderRef.current?.stop();
+              recorderRef.current = null;
+              console.warn('[live] sendRealtimeInput faalde, recorder gestopt', sendErr);
+            }
           },
         });
         recorderRef.current = recorder;

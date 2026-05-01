@@ -16,11 +16,25 @@ export class LivePlayer {
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
     this.context = new Ctor({ sampleRate: OUTPUT_SAMPLE_RATE });
+    if (this.context.state === 'suspended') {
+      try {
+        await this.context.resume();
+      } catch (err) {
+        console.warn('[player] resume faalde', err);
+      }
+    }
     this.nextStartTime = this.context.currentTime;
+    console.info('[player] init, state=', this.context.state, 'sr=', this.context.sampleRate);
   }
 
   enqueueBase64(base64: string): void {
-    if (!this.context) return;
+    if (!this.context) {
+      console.warn('[player] enqueue zonder context');
+      return;
+    }
+    if (this.context.state === 'suspended') {
+      this.context.resume().catch(() => undefined);
+    }
     const bytes = bytesFromBase64(base64);
     if (bytes.length === 0) return;
     const samples = bytes.length / 2;

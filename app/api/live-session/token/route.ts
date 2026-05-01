@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
     const ai = new GoogleGenAI({
       apiKey,
       apiVersion: 'v1alpha',
+      httpOptions: { apiVersion: 'v1alpha' },
     } as ConstructorParameters<typeof GoogleGenAI>[0]);
     const expireTime = new Date(Date.now() + TOKEN_TTL_SECONDS * 1000).toISOString();
     const newSessionExpireTime = new Date(Date.now() + 60 * 1000).toISOString();
@@ -119,12 +120,10 @@ export async function POST(request: NextRequest) {
           model,
           config: liveConfig as never,
         },
-        lockAdditionalFields: [
-          'systemInstruction',
-          'tools',
-          'responseModalities',
-          'speechConfig',
-        ],
+        // Empty array: alleen velden in liveConnectConstraints zijn locked.
+        // Niet-empty array bleek "Operation is not implemented" te triggeren
+        // bij gemini-3.1-flash-live-preview met BidiGenerateContentConstrained.
+        lockAdditionalFields: [],
       },
     });
 
@@ -136,7 +135,6 @@ export async function POST(request: NextRequest) {
       token: token.name,
       expiresAt: expireTime,
       model,
-      config: liveConfig,
     });
   } catch (error) {
     const message =

@@ -30,7 +30,7 @@ export function AudioVisualizer({ speaker }: AudioVisualizerProps) {
       role="status"
       aria-live="polite"
       aria-label={label}
-      className="relative flex items-center justify-center w-48 h-48"
+      className="relative flex items-center justify-center w-32 h-32"
     >
       <span className={outer} aria-hidden="true" />
       <span className={inner} aria-hidden="true" />
@@ -40,7 +40,7 @@ export function AudioVisualizer({ speaker }: AudioVisualizerProps) {
 
 function innerClass(speaker: SpeakerState): string {
   const base =
-    'relative w-32 h-32 rounded-full transition-colors duration-300';
+    'relative w-20 h-20 rounded-full transition-colors duration-300';
   if (speaker === 'bot') return `${base} bg-purple-primary`;
   if (speaker === 'docent') return `${base} bg-purple-light-bg border-2 border-purple-primary`;
   return `${base} bg-purple-primary/30`;

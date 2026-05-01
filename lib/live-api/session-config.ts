@@ -1,7 +1,6 @@
 /**
- * Bouwt de Live API session config. Wordt zowel server-side gebruikt voor
- * ephemeral-token-creatie (lockt de config) als client-side meegegeven aan
- * `ai.live.connect`. Houd de waardes hetzelfde aan beide kanten.
+ * Bouwt de Live API session config. Deze config blijft server-side en wordt
+ * vastgelegd in het ephemeral token via liveConnectConstraints.
  */
 import {
   PERSONA_LANGUAGE_CODE,

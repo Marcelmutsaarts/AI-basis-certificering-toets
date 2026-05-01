@@ -92,9 +92,12 @@ export function ExamScreen({ examSessionId, casussen }: ExamScreenProps) {
 
   const totalDots = useMemo(() => casussen.length, [casussen.length]);
 
+  const showMain =
+    !showError && !showConnecting;
+
   return (
-    <main className="flex-1 px-4 md:px-12 py-4 md:py-6">
-      <div className="mx-auto w-full max-w-2xl flex flex-col gap-5 md:gap-6 min-h-[calc(100vh-6rem)] md:min-h-0">
+    <main className="flex-1 flex flex-col px-4 md:px-12 pt-3 pb-3 md:pt-4 md:pb-4 h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="mx-auto w-full max-w-3xl flex flex-col gap-3 md:gap-4 flex-1 min-h-0">
         <ProgressDots total={totalDots} currentIndex={progress.currentIndex} />
 
         {showError ? (
@@ -113,9 +116,24 @@ export function ExamScreen({ examSessionId, casussen }: ExamScreenProps) {
                 : 'Verbinden met Lieke...'
             }
           />
-        ) : (
+        ) : null}
+
+        {showMain ? (
+          <Card padding="md" className="flex-1 min-h-0 flex flex-col">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-semibold text-purple-dark">
+                Live transcript
+              </h2>
+              <SpeakerDot speaker={speaker} />
+            </div>
+            <div className="flex-1 min-h-0">
+              <LiveTranscript bubbles={transcript.bubbles} />
+            </div>
+          </Card>
+        ) : null}
+
+        {showMain ? (
           <ExamMainCard
-            speaker={speaker}
             muted={muted}
             ending={ending}
             connected={conn.status === 'connected'}
@@ -127,17 +145,29 @@ export function ExamScreen({ examSessionId, casussen }: ExamScreenProps) {
             onStop={handleStop}
             onAbort={handleAbort}
           />
-        )}
-
-        {!showError ? (
-          <Card padding="md">
-            <h2 className="text-sm font-semibold text-purple-dark mb-2">
-              Live transcript
-            </h2>
-            <LiveTranscript bubbles={transcript.bubbles} />
-          </Card>
         ) : null}
       </div>
     </main>
+  );
+}
+
+function SpeakerDot({ speaker }: { speaker: SpeakerState }) {
+  const label =
+    speaker === 'bot'
+      ? 'Lieke spreekt'
+      : speaker === 'docent'
+        ? 'Jij spreekt'
+        : 'Stilte';
+  const color =
+    speaker === 'bot'
+      ? 'bg-purple-primary avd-pulse-fast'
+      : speaker === 'docent'
+        ? 'bg-purple-medium avd-pulse-fast'
+        : 'bg-purple-primary/30';
+  return (
+    <span className="flex items-center gap-2 text-xs text-text-body/70">
+      <span className={`inline-block w-2.5 h-2.5 rounded-full ${color}`} aria-hidden="true" />
+      {label}
+    </span>
   );
 }

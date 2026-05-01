@@ -13,14 +13,12 @@ import {
   type LiveStatus,
 } from '@/hooks/useLiveSession';
 import { classifyExamError } from '@/components/exam/ExamErrorPanel';
-import type { LiveConfig } from '@/lib/live-api/session-config';
 
 const MAX_AUTO_RETRIES = 2;
 
 interface TokenResponse {
   token: string;
   model: string;
-  config: LiveConfig;
 }
 
 export interface UseExamConnectionOptions {
@@ -71,7 +69,6 @@ export function useExamConnection({
         const data = (await res.json()) as TokenResponse;
         await live.start({
           token: data.token,
-          config: data.config,
           model: data.model,
         });
       } catch (err) {
@@ -94,11 +91,14 @@ export function useExamConnection({
     const errKind = classifyExamError(live.errorMessage ?? bootError);
     if (errKind === 'mic-denied') return;
     autoRetriesRef.current += 1;
-    setRetrying(true);
+    const retryingTimer = window.setTimeout(() => setRetrying(true), 0);
     const timer = window.setTimeout(() => {
       void boot({ retry: true }).finally(() => setRetrying(false));
     }, 1500);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(retryingTimer);
+      window.clearTimeout(timer);
+    };
   }, [live.status, live.errorMessage, bootError, boot]);
 
   const manualRetry = useCallback(async () => {

@@ -32,12 +32,15 @@ export const OUTPUT_SAMPLE_RATE = 24_000;
 
 /**
  * Default modelnaam, configureerbaar via env MODEL_LIVE.
- * Gebruik strikt deze identifier, niet vervangen door een ouder model.
+ *
+ * De Live API preview variant vereist de `-preview` suffix. De niet-preview
+ * naam `gemini-3.1-flash-live` sluit direct omdat dat model niet beschikbaar
+ * is voor deze endpoint.
  */
 export function resolveLiveModel(): string {
   const env = process.env.MODEL_LIVE;
   if (env && env.trim().length > 0) {
     return env.trim();
   }
-  return 'gemini-3.1-flash-live';
+  return 'gemini-3.1-flash-live-preview';
 }
