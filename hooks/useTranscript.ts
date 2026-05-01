@@ -5,6 +5,10 @@
  * maximaal een actieve (streaming) bubble waaraan tekst wordt aangevuld.
  * Zodra een bubble afsluit (finished:true) wordt deze gepusht naar
  * /api/live-session/transcript voor persistentie.
+ *
+ * BUG-W3-002: De Live API kan transcript-events soms cumulatief sturen
+ * (text = volledige string tot nu toe) en soms incrementeel (text = delta).
+ * mergeTranscriptText pakt beide gevallen correct af, plus dedup.
  */
 import { useCallback, useRef, useState } from 'react';
 import type { TranscriptEvent } from './useLiveSession';
@@ -21,12 +25,20 @@ export interface TranscriptBubble {
 interface ActiveBubble {
   id: string;
   startedAt: string;
-  parts: string[];
+  fullText: string;
   sequence: number;
 }
 
 export interface UseTranscriptOptions {
   examSessionId: string;
+}
+
+export function mergeTranscriptText(prev: string, incoming: string): string {
+  if (!incoming) return prev;
+  if (!prev) return incoming;
+  if (incoming.startsWith(prev)) return incoming;
+  if (prev.endsWith(incoming)) return prev;
+  return prev + incoming;
 }
 
 export function useTranscript({ examSessionId }: UseTranscriptOptions) {
@@ -72,10 +84,11 @@ export function useTranscript({ examSessionId }: UseTranscriptOptions) {
         const id = `${event.speaker}-${sequenceRef.current}`;
         const sequence = sequenceRef.current;
         sequenceRef.current += 1;
+        const initialText = event.text ?? '';
         const newActive: ActiveBubble = {
           id,
           startedAt: event.at,
-          parts: [event.text],
+          fullText: initialText,
           sequence,
         };
         activeRef.current[event.speaker] = newActive;
@@ -84,7 +97,7 @@ export function useTranscript({ examSessionId }: UseTranscriptOptions) {
           {
             id,
             speaker: event.speaker,
-            text: event.text,
+            text: initialText,
             startedAt: event.at,
             finished: false,
             sequence,
@@ -96,7 +109,7 @@ export function useTranscript({ examSessionId }: UseTranscriptOptions) {
           void persistBubble({
             id,
             speaker: event.speaker,
-            text: event.text,
+            text: initialText,
             startedAt: event.at,
             finished: true,
             sequence,
@@ -105,14 +118,14 @@ export function useTranscript({ examSessionId }: UseTranscriptOptions) {
         return;
       }
 
-      active.parts.push(event.text);
-      const fullText = active.parts.join('');
-      updateBubble(active.id, (b) => ({ ...b, text: fullText }));
+      const merged = mergeTranscriptText(active.fullText, event.text ?? '');
+      active.fullText = merged;
+      updateBubble(active.id, (b) => ({ ...b, text: merged }));
       if (event.finished) {
         const finishedBubble: TranscriptBubble = {
           id: active.id,
           speaker: event.speaker,
-          text: fullText,
+          text: merged,
           startedAt: active.startedAt,
           finished: true,
           sequence: active.sequence,
@@ -132,7 +145,7 @@ export function useTranscript({ examSessionId }: UseTranscriptOptions) {
       const bubble: TranscriptBubble = {
         id: active.id,
         speaker,
-        text: active.parts.join(''),
+        text: active.fullText,
         startedAt: active.startedAt,
         finished: true,
         sequence: active.sequence,

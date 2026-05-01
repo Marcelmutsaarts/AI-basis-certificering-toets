@@ -119,7 +119,12 @@ export async function POST(request: NextRequest) {
           model,
           config: liveConfig as never,
         },
-        lockAdditionalFields: [],
+        lockAdditionalFields: [
+          'systemInstruction',
+          'tools',
+          'responseModalities',
+          'speechConfig',
+        ],
       },
     });
 
