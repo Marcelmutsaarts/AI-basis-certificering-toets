@@ -19,6 +19,7 @@ import {
 } from '@/lib/evaluator/call-openrouter';
 import { persistEvaluation } from '@/lib/evaluator/persist';
 import { loadEvaluationContext } from '@/lib/evaluator/load-context';
+import { triggerWebhookForSession } from '@/lib/webhook/trigger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -84,6 +85,11 @@ export async function POST(_request: NextRequest, context: RouteContext) {
       examSessionId: sessionId,
       output,
       modelUsed: model,
+    });
+    // Fire-and-forget: webhook fails mogen evaluator-response niet breken.
+    triggerWebhookForSession(writer, sessionId).catch((err) => {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      console.error('[api/evaluate] webhook trigger failed', { sessionId, msg });
     });
     return NextResponse.json({ ok: true, evaluation: row }, { status: 200 });
   } catch (err) {
