@@ -1,5 +1,4 @@
 {
-  "_comment": "Hobby tier ondersteunt 1 cron per dag. Failed webhooks worden dus eens per dag opnieuw geprobeerd. Voor snellere retries: upgrade naar Pro en zet schedule op '*/5 * * * *' of admin retry-knop gebruiken.",
   "crons": [
     { "path": "/api/webhook-retry", "schedule": "0 6 * * *" }
   ]
