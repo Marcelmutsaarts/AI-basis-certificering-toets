@@ -1,26 +1,22 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * AVD design tokens als CSS custom properties.
+ * Tailwind v4 leest --color-* binnen @theme als utility-namespace,
+ * dus `bg-purple-primary`, `text-text-body` etc. werken automatisch.
+ */
+@theme {
+  --color-purple-primary: #a15df5;
+  --color-purple-light-bg: #ebdfff;
+  --color-purple-dark: #7947ba;
+  --color-purple-medium: #814bc6;
+  --color-text-body: #4a5568;
+
+  --radius-button: 10px;
+  --radius-card: 12px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
 }
