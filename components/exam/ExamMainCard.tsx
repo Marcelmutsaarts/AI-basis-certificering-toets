@@ -34,30 +34,31 @@ export function ExamMainCard({
     <Card padding="md">
       <div className="flex flex-col items-center justify-center gap-5 md:gap-6 min-h-[18rem] md:min-h-0">
         <AudioVisualizer speaker={speaker} />
-        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
-          <MicButton
-            muted={muted}
-            onToggle={onToggleMute}
-            disabled={!connected}
-          />
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={onStop}
-            disabled={ending}
-            className="min-h-[44px]"
-          >
-            {ending ? 'Bezig met afronden' : 'Examen afronden'}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
+        <div className="flex flex-col items-center">
+          <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
+            <MicButton
+              muted={muted}
+              onToggle={onToggleMute}
+              disabled={!connected}
+            />
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={onStop}
+              disabled={ending}
+              className="min-h-[44px]"
+            >
+              {ending ? 'Bezig met afronden' : 'Examen afronden'}
+            </Button>
+          </div>
+          <button
+            type="button"
             onClick={onAbort}
             disabled={ending}
-            className="min-h-[44px] text-text-body border-text-body/30 hover:bg-purple-light-bg/60"
+            className="mt-3 text-sm text-text-body/70 hover:text-purple-dark hover:underline transition-colors disabled:opacity-50 disabled:hover:no-underline"
           >
             Sessie afbreken
-          </Button>
+          </button>
         </div>
       </div>
     </Card>

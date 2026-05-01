@@ -77,26 +77,28 @@ export default function LoginPage() {
               </div>
             ) : null}
 
-            <label className="flex flex-col gap-1 text-sm text-text-body">
+            <label htmlFor="email" className="flex flex-col gap-1 text-sm text-text-body">
               <span className="font-medium">E-mailadres</span>
               <input
+                id="email"
                 type="email"
                 autoComplete="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="rounded-xl border border-purple-light-bg px-4 py-3 text-base focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/30"
+                className="rounded-xl border border-purple-primary/20 px-4 py-3 text-base focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/30"
                 placeholder="naam@school.nl"
               />
             </label>
 
-            <label className="flex flex-col gap-1 text-sm text-text-body">
+            <label htmlFor="password" className="flex flex-col gap-1 text-sm text-text-body">
               <span className="font-medium">Wachtwoord</span>
               <input
+                id="password"
                 type="password"
                 autoComplete="current-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="rounded-xl border border-purple-light-bg px-4 py-3 text-base focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/30"
+                className="rounded-xl border border-purple-primary/20 px-4 py-3 text-base focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/30"
               />
             </label>
 

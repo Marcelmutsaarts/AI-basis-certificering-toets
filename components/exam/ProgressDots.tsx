@@ -33,6 +33,6 @@ export function ProgressDots({ total, currentIndex }: ProgressDotsProps) {
 function dotClass(state: 'done' | 'current' | 'pending'): string {
   const base = 'block w-3 h-3 rounded-full transition-colors duration-200';
   if (state === 'done') return `${base} bg-purple-primary`;
-  if (state === 'current') return `${base} bg-purple-primary ring-2 ring-purple-primary/30 ring-offset-2 ring-offset-purple-light-bg`;
+  if (state === 'current') return `${base} bg-purple-primary ring-2 ring-purple-primary/30 ring-offset-2 ring-offset-white`;
   return `${base} bg-purple-primary/25`;
 }

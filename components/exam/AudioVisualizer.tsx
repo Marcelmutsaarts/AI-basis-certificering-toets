@@ -6,7 +6,7 @@
  *  - docent: lichtpaars (purple-light-bg, donkerder rand).
  *  - stilte: zacht paars met langzame pulse.
  *
- * Animatie via CSS keyframes, geen extra dependencies.
+ * Animatie via globale keyframes in globals.css (avd-pulse-fast / avd-pulse-slow).
  */
 
 export type SpeakerState = 'bot' | 'docent' | null;
@@ -34,7 +34,6 @@ export function AudioVisualizer({ speaker }: AudioVisualizerProps) {
     >
       <span className={outer} aria-hidden="true" />
       <span className={inner} aria-hidden="true" />
-      <style>{ANIMATION_CSS}</style>
     </div>
   );
 }
@@ -54,16 +53,3 @@ function outerClass(speaker: SpeakerState): string {
   if (speaker === 'docent') return `${base} bg-purple-primary/15 avd-pulse-fast`;
   return `${base} bg-purple-primary/10 avd-pulse-slow`;
 }
-
-const ANIMATION_CSS = `
-@keyframes avd-pulse-fast {
-  0%, 100% { transform: scale(1); opacity: 0.55; }
-  50% { transform: scale(1.12); opacity: 0.85; }
-}
-@keyframes avd-pulse-slow {
-  0%, 100% { transform: scale(1); opacity: 0.4; }
-  50% { transform: scale(1.05); opacity: 0.6; }
-}
-.avd-pulse-fast { animation: avd-pulse-fast 1.4s ease-in-out infinite; }
-.avd-pulse-slow { animation: avd-pulse-slow 3s ease-in-out infinite; }
-`;
