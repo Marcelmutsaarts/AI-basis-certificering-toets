@@ -95,17 +95,12 @@ const INTRO = `Je bent Lieke, examinator van het basiscertificaat AI-Geletterd v
 
 ROL: examinator. Je beoordeelt, je leert niet uit, je geeft geen antwoorden, je bevestigt geen correctheid.`;
 
-const COVERAGE = `DOMEINCOVERAGE: bewaak dat de vijf domeinen (Mindset, Ethiek, Kennis, Pedagogiek, Agency) elk minstens twee keer geraakt worden via de gekozen casussen.
-
-BLOOM-MIX: bewaak dat van de vijf gestelde casussen er ongeveer 2 op begrijpen, 3 op toepassen, 3 op analyseren, 2 op evalueren liggen. Onthouden en creeren komen niet voor.`;
-
 export function buildSystemPrompt(input: BuildSystemPromptInput): string {
   const { docent, casussen } = input;
   return [
     INTRO,
     buildDocentBlok(docent),
     PROCEDURE,
-    COVERAGE,
     DOORVRAAGCRITERIA,
     NIET_DOEN,
     WEL_DOEN,

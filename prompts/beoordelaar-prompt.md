@@ -1,43 +1,20 @@
-/**
- * Bouwt de system- en user-prompt voor de evaluator-LLM.
- *
- * System prompt is letterlijk volgens coder.md sectie "Evaluator-prompt".
- * User prompt bevat docentgegevens, gestelde casussen met domein-tags,
- * en het volledige transcript geformatteerd als "Bot:" / "Docent:" regels.
- */
+# Beoordelaar (evaluator), prompts
 
-export interface EvaluatorTranscriptLine {
-  speaker: 'bot' | 'docent';
-  text: string;
-}
+De prompts voor het beoordelaar-model dat na afloop het transcript scoort op
+het rubric en het JSON-resultaat teruggeeft. Dit is een apart, tekstgebaseerd
+model (niet de spraak-bot).
 
-export interface EvaluatorCasus {
-  webinar: number;
-  code: string;
-  prompt: string;
-  domains: string[];
-  bloomCategory: string;
-}
+- **Bron in code:** `lib/evaluator/prompt.ts` (functie `buildEvaluatorPrompt`)
+- **Model:** `google/gemini-3.1-pro-preview` via OpenRouter (env `MODEL_EVALUATOR`)
+- De evaluator krijgt twee delen: een vaste **system prompt** en een per examen
+  opgebouwde **user prompt** (docentgegevens, gestelde casussen, het transcript).
 
-export interface EvaluatorDocent {
-  fullName: string;
-  niveau: string;
-  vakgebied: string | null;
-  school: string;
-}
+---
 
-export interface BuildPromptArgs {
-  transcript: EvaluatorTranscriptLine[];
-  docent: EvaluatorDocent;
-  casuses: EvaluatorCasus[];
-}
+## 1. System prompt (vast)
 
-export interface BuiltPrompt {
-  system: string;
-  user: string;
-}
-
-const SYSTEM_PROMPT = `Je bent een ervaren examinator voor het basiscertificaat AI-Geletterd van AI voor Docenten. Je beoordeelt het transcript van een mondeling examen volgens onderstaand rubric. Je beoordeelt streng-doch-rechtvaardig en altijd onderbouwd met citaten uit het transcript.
+```text
+Je bent een ervaren examinator voor het basiscertificaat AI-Geletterd van AI voor Docenten. Je beoordeelt het transcript van een mondeling examen volgens onderstaand rubric. Je beoordeelt streng-doch-rechtvaardig en altijd onderbouwd met citaten uit het transcript.
 
 KADER. Dit examen toetst de vijf basiswebinars van AI voor Docenten. De rode draad van dat programma is bewuste, kritische inzet van AI met behoud van eigen regie: AI als gereedschap dat het onderwijs versterkt, niet als vervanging van het vakmanschap van de docent. Beoordeel of het denken van de docent bij die houding past. Waardeer een onderbouwde positie, of die nu voor of tegen AI-gebruik is, boven louter enthousiasme of louter afwijzing.
 
@@ -76,51 +53,47 @@ Output strikt in dit JSON-schema, geen extra tekst eromheen:
   "passed": true,
   "samenvatting": "Een alinea van 3 tot 5 zinnen voor de docent zelf, in tweede persoon enkelvoud, vriendelijk en helder.",
   "ontwikkeladvies": "Een alinea met concrete suggesties als er ORANJE of ROOD scores zijn, anders een korte felicitatie."
-}`;
-
-function formatDocent(docent: EvaluatorDocent): string {
-  const parts = [
-    `Naam: ${docent.fullName}`,
-    `Onderwijsniveau: ${docent.niveau}`,
-    `School: ${docent.school}`,
-  ];
-  if (docent.vakgebied && docent.vakgebied.trim().length > 0) {
-    parts.push(`Vakgebied: ${docent.vakgebied}`);
-  }
-  return parts.join('\n');
 }
+```
 
-function formatCasuses(casuses: EvaluatorCasus[]): string {
-  if (casuses.length === 0) return '(geen casussen geregistreerd)';
-  return casuses
-    .slice()
-    .sort((a, b) => a.webinar - b.webinar)
-    .map((c) => {
-      const domains = c.domains.length > 0 ? c.domains.join(', ') : 'geen';
-      return `Webinar ${c.webinar} (${c.code}) [domeinen: ${domains}; cognitief proces: ${c.bloomCategory}]\n  Vraag: ${c.prompt}`;
-    })
-    .join('\n\n');
-}
+---
 
-function formatTranscript(lines: EvaluatorTranscriptLine[]): string {
-  if (lines.length === 0) return '(leeg transcript)';
-  return lines
-    .map((l) => {
-      const label = l.speaker === 'bot' ? 'Bot' : 'Docent';
-      return `${label}: ${l.text}`;
-    })
-    .join('\n');
-}
+## 2. User prompt (per examen opgebouwd)
 
-export function buildEvaluatorPrompt({
-  transcript,
-  docent,
-  casuses,
-}: BuildPromptArgs): BuiltPrompt {
-  const user =
-    `Docentgegevens:\n${formatDocent(docent)}\n\n` +
-    `Gestelde casussen (in volgorde):\n${formatCasuses(casuses)}\n\n` +
-    `Transcript van het examen:\n${formatTranscript(transcript)}\n\n` +
-    `Beoordeel nu volgens het rubric en lever uitsluitend de gevraagde JSON.`;
-  return { system: SYSTEM_PROMPT, user };
-}
+`{{...}}` markeert waarden die worden ingevuld vanuit de database.
+
+```text
+Docentgegevens:
+Naam: {{naam}}
+Onderwijsniveau: {{niveau}}
+School: {{school}}
+Vakgebied: {{vakgebied}}
+
+Gestelde casussen (in volgorde):
+Webinar {{n}} ({{code}}) [domeinen: {{domeinen}}; cognitief proces: {{bloomCategory}}]
+  Vraag: {{casusvraag}}
+
+[... per casus herhaald, gesorteerd op webinar-nummer ...]
+
+Transcript van het examen:
+Bot: {{wat Lieke zei}}
+Docent: {{wat de docent zei}}
+Bot: {{...}}
+Docent: {{...}}
+
+[... volledige transcript, regel per regel ...]
+
+Beoordeel nu volgens het rubric en lever uitsluitend de gevraagde JSON.
+```
+
+---
+
+## Toelichting
+
+| Onderdeel | Waar komt het vandaan |
+|---|---|
+| Docentgegevens | Profiel van de docent (`profiles`). De regel `Vakgebied:` valt weg als er geen vakgebied is ingevuld. |
+| Gestelde casussen | De vijf casussen die in dit examen aan bod kwamen (`casuses`), gesorteerd op webinar-nummer. |
+| Transcript | Alle transcriptregels (`transcripts`), als `Bot:` / `Docent:` regels. Audio wordt nooit bewaard, alleen deze tekst. |
+| Domeindefinities | De vijf domeinen in de system prompt komen overeen met `lib/domains/framework.ts`. |
+| JSON-output | Wordt gevalideerd tegen een Zod-schema (`lib/evaluator/schema.ts`) en opgeslagen in `evaluations`. |
