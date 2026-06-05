@@ -1,0 +1,128 @@
+/**
+ * Ground truth per webinar: kernpunten waar een correct antwoord op aansluit
+ * (uit sectie 1, en waar relevant 4 en 5) en rode vlaggen voor oppervlakkige
+ * of ingestudeerde antwoorden (uit sectie 4). Gecondenseerd, niets toegevoegd.
+ */
+import type { WebinarGround } from './types';
+
+export const WEBINAR_GROUND: Record<number, WebinarGround> = {
+  1: {
+    webinar: 1,
+    titel: 'Hoe werkt een LLM en basis-prompting',
+    kernpunten: [
+      'Generatieve AI genereert nieuwe content en is breder dan een chatbot; de modaliteit kan tekst, beeld, video of audio zijn. Niet alle AI is generatief.',
+      'Een taalmodel wordt getraind via pretraining (structuur leren uit veel data, scaling law) en posttraining of fine-tuning (bijgeslepen op antwoorden die mensen prettig vinden via feedback).',
+      'Prettig gevonden worden zegt niets over inhoudelijke juistheid, dus output altijd zelf kritisch beoordelen.',
+      'De system prompt is de vaste tekst van de aanbieder die de chatbot als eerste leest; die stuurt gedrag en grenzen. Met een eigen prompt of personalisatie pak je zelf de regie.',
+      'Een gerichte prompt volgt het format rol, doel of context, instructies, eventueel voorbeeld of output en kennis of bijlagen; meer goede context geeft betere output.',
+      'Sycofantie is de neiging om de gebruiker gelijk te geven en te complimenteren, voortkomend uit posttraining en system prompt, en deels weg te prompten.',
+      'Een agent voert zelfstandig een taak uit, plant en controleert zelf, anders dan een chatbot die alleen antwoordt.',
+      'AI zonder didactische begeleiding leidt tot cognitive offloading en minder leren; met goede begeleiding versterkt het het leren. De inzet, niet de tool, maakt het verschil.',
+    ],
+    rodeVlaggen: [
+      'Buzzwords zonder uitleg ("AI is de toekomst", "je moet AI-geletterd zijn") zonder concrete invulling.',
+      'De term "prompten" of "system prompt" gebruiken zonder eigen voorbeeld of zonder de opbouw te kunnen uitleggen.',
+      'Een rijtje opsommen (pretraining, posttraining, reasoning) zonder begrip van wat het doet.',
+      'Alleen enthousiasme of alleen afwijzing zonder voor- en nadelen tegen elkaar te zetten.',
+      'Geen koppeling aan de eigen onderwijscontext, vak of leerlingen; het antwoord blijft abstract.',
+      'AI-output klakkeloos vertrouwen, geen woord over zelf controleren of kritisch beoordelen.',
+      'Denken dat de chatbot eerst jouw vraag leest in plaats van de system prompt, of dat enthousiasme inhoudelijke juistheid betekent.',
+      'ChatGPT gelijkstellen aan AI, of denken dat een chatbot echt weet of per definitie juiste antwoorden geeft.',
+    ],
+  },
+  2: {
+    webinar: 2,
+    titel: 'Custom chatbots en AI als docent-assistent',
+    kernpunten: [
+      'Een custom chatbot is in de kern een opgeslagen prompt; de waarde zit in herbruikbaarheid en deelbaarheid, niet in magie. Binnen ChatGPT heet dit een GPT, binnen Gemini een Gem.',
+      'De opbouw is rol, doel, context, instructies, voorbeeld, output en kennis; rol, doel of context en instructies zijn minimaal nodig, een voorbeelditem maakt het scherper.',
+      'Naam en beschrijving sturen het gedrag niet; ze helpen alleen terugvinden. GPTs bouwen vraagt meestal betaald, Gems en NotebookLM kunnen gratis.',
+      'AI kan met goede prompting sterk nakijken (op exacte vakken soms beter dan een docent), maar met een slechte prompt juist volledig misgaan; het hangt af van vak en kalibratie.',
+      'Beoordelen valt onder hoog risico in de EU AI-act; AI is daarbij hulpmiddel en geen eindbeoordelaar, de mens blijft in de loop.',
+      'Persoonsgegevens horen niet in publieke chatbots die data naar de VS sturen; anonimiseer eerst of gebruik een lokale of Europese oplossing.',
+      'Vage of generieke input geeft generieke output; eigen context, eigen voorbeelden en kritische controle voorkomen gemiddelde, inwisselbare resultaten.',
+      'Tools onderscheiden: GPT, Gem, project, skill, agent, deep research, computer use en NotebookLM (werkt vanuit bronnen en hallucineert daardoor minder).',
+    ],
+    rodeVlaggen: [
+      'Een custom chatbot als iets fundamenteel slims of intelligents zien in plaats van als opgeslagen prompt.',
+      'Termen als agent, skill, deep research of computer use noemen zonder te kunnen uitleggen wat ze doen of wanneer je ze inzet.',
+      'Alleen voordelen opsommen (tijdwinst, persoonlijke feedback) zonder enige afweging, grens of risico.',
+      'AI beschrijven als iets dat de taak overneemt, zonder eigen controle, kalibratie of inhoudelijke eindverantwoordelijkheid.',
+      'Denken dat vagere instructies vrijere of creatievere output geven, of dat de naam of beschrijving het gedrag bepaalt.',
+      'Denken dat alles met een gratis account kan, of leerling- en persoonsgegevens zonder anonimiseren in een chatbot zetten.',
+      'Techniek en toelaatbaarheid door elkaar halen ("als het technisch kan, mag het ook").',
+    ],
+  },
+  3: {
+    webinar: 3,
+    titel: 'Van AI-proof naar AI-ready toetsen en onderwijsontwerp',
+    kernpunten: [
+      'AI-proof houdt AI buiten de deur (detectie, verboden, controle); AI-ready accepteert AI als deel van de werkelijkheid en ontwerpt onderwijs zo dat het leren overeind blijft. AI-ready is de productievere framing.',
+      'Assessment drives learning: hoe je toetst stuurt waar leerlingen zich op richten.',
+      'Validiteit (meten we wat we willen meten) is belangrijker dan betrouwbaarheid alleen; een betrouwbare toets kan toch het verkeerde meten (schedelomtrek-voorbeeld). Constructvaliditeit staat onder druk door AI.',
+      'AI-detectie is onbetrouwbaar (grondwet en Shakespeare werden gemarkeerd); een humanizer omzeilt het en docenten overschatten hun eigen herkenning sterk.',
+      'Het 4Ps-framework geeft vier soorten bewijs: product (zwaar geraakt door AI), process (gedeeltelijk), performance (robuust) en practice (grotendeels veilig). AI-ready is een mix, niet leunen op product alleen.',
+      'Veel AI-gebruik is een rationele keuze die voortkomt uit hoe de toets is ontworpen; dat is een validiteitsprobleem bij het onderwijs, niet alleen fraude van de leerling.',
+      'Cognitieve uitbesteding is niet inherent slecht; het kan denken verlengen en verrijken, en is alleen schadelijk als het het denken vervangt dat je wilde oefenen.',
+      'Spreek over categorieen van cognitieve processen, niet over niveaus of hogere of lagere orde; AI doet de vermeende hogere categorieen juist moeiteloos en de oorspronkelijke taxonomie kende geen hierarchie.',
+    ],
+    rodeVlaggen: [
+      'Buzzwords zonder inhoud: "AI-ready", "21e-eeuwse vaardigheden", "we moeten meegaan met de tijd", zonder concreet ander handelen.',
+      'Pleiten voor detectietools of "ik herken AI-tekst" als oplossing, zonder de onbetrouwbaarheid te erkennen.',
+      'Alleen het product noemen (essay, verslag) en niet hoe je het leerproces of de verantwoording zou toetsen.',
+      'Praten in termen van fraude en controle in plaats van validiteit, betekenisvol leren of leerdoelen.',
+      'Geen voorbeeld uit het eigen vak of de eigen onderwijscontext.',
+      'AI-proof en AI-ready verwarren of als synoniemen gebruiken.',
+      'Spreken over hogere en lagere orde als vaststaand feit, of creeren automatisch als het hoogste behandelen.',
+      '"Altijd mondeling" of "verbied AI" zeggen zonder af te wegen wanneer dat bij het leerdoel past.',
+    ],
+  },
+  4: {
+    webinar: 4,
+    titel: 'AI om het leren te verrijken (Mollick-rollen)',
+    kernpunten: [
+      'Mollick beschrijft rollen die AI bij het leren kan spelen; de standaardstand zonder sturing is tutor. Voor basis tellen tutor of Socratisch, simulator, hulpmiddel en procesbegeleider.',
+      'Tutor geeft uitleg en doet voor (zinvol als de leerling iets nog niet begrijpt, met het risico van luier worden); een Socratische bot stelt wedervragen zodat de leerling zelf denkt (zinvol als de stof al gekend wordt). Ze vullen elkaar aan: eerst bevragen, bij een fout alsnog uitleggen.',
+      'Simulator: bootst een situatie, persoon of proces na om een vaardigheid actief te oefenen (gesprekssimulatie of visuele simulatie), wat een andere dynamiek geeft dan consumeren.',
+      'Procesbegeleider: AI bewaakt het proces of de stappen, de leerling levert zelf de inhoud, zodat het hoofd vrij is voor de inhoud.',
+      'NotebookLM werkt altijd vanuit geuploade bronnen en hallucineert daardoor minder en verwijst naar passages; het maakt podcast, diapresentatie, video-overzicht, mindmap, flashcards, quiz of infographic. Het is gratis maar traint op je data, dus geen vertrouwelijke informatie.',
+      'AI kan leiden tot leerverarming of leerverrijking; het verschil zit in de begeleiding. Een algemene AI losgooien vervalt in didactische bias (gemiddeld, docentgestuurd), pas met goed prompten en didactisch inbedden wordt AI een hefboom.',
+      '(gevorderd) Mentor is de risicovolste rol voor AI (mist empathie, vertrouwen, relationele diepgang, neigt naar standaardadvies en bias); de coachrol is veelbelovender mits goed geprompt en ingebed.',
+      '(gevorderd) AI co-reguleert maar vervangt de docent niet; het werkt voor cognitieve en metacognitieve taken (plannen, reflectie) maar weinig voor motivatie en emotie. Zelfregulerend leren en het drie-fasenmodel van Zimmerman horen hierbij.',
+    ],
+    rodeVlaggen: [
+      'De rollen opsommen als rijtje zonder ze aan het eigen vak of een concreet leerdoel te koppelen.',
+      '"Socratisch is beter dan tutor" (of omgekeerd) als absoluut feit, zonder het moment in het leerproces te benoemen.',
+      'Tutor en Socratisch verwarren, of een procesbegeleider beschrijven als iemand die de inhoud levert.',
+      'NotebookLM noemen zonder te weten dat het vanuit bronnen werkt, of het gelijkstellen aan ChatGPT.',
+      'AI als tutor of orakel onverdeeld positief behandelen, zonder het risico van uitbesteed denken of pleasen.',
+      'Een zwart-wit oordeel bij toetsvoorbereiding ("mag wel" of "mag niet") zonder af te wegen of het leren wordt versterkt of vervangen.',
+      'Buzzwords zonder inhoud: "gepersonaliseerd leren", "AI is de toekomst", "24/7 beschikbaar".',
+      'Denken dat de docent overbodig wordt; missen dat AI co-reguleert en de docent de menselijke kerntaken houdt.',
+    ],
+  },
+  5: {
+    webinar: 5,
+    titel: "Risico's van AI",
+    kernpunten: [
+      'Een taalmodel voorspelt statistisch het volgende woord (droommachine), is geen kennisbank en daardoor op zichzelf ongeschikt als bron; wel bruikbaar als medium naar een bron toe, mits je verifieert.',
+      'Hallucineren is plausibel klinkende maar onjuiste output zonder intentie; een inherente eigenschap van voorspellende systemen, te verminderen maar niet weg te poetsen. Omdat het model geen intentie heeft, produceert het misinformatie (onjuist zonder opzet), geen desinformatie (moedwillig).',
+      'Bias komt vooral uit trainingsdata en uit taal zelf en is niet volledig te verwijderen; het is soms ook een functie (patronen blootleggen). De juiste houding is kritisch blijven en goed prompten.',
+      'Cognitive offloading is je denken ondersteunen met een hulpmiddel en is niet zwart-wit: nuttig bij ontlasten, verplaatsen en verdiepen (e-bike), schadelijk bij vermijden, overgave en waarden afstaan. Het generatie-effect pleit voor eerst zelf worstelen.',
+      'Auteursrecht kent drie lagen (trainingsdata, gebruik, output) en is grotendeels juridisch onbeslist; puur AI-gegenereerde output is niet automatisch van jou, pas bij voldoende eigen creatieve bewerking ontstaat recht.',
+      'De AVG onderscheidt privacy-ongevoelige data, gewone persoonsgegevens (artikel 4: naam, e-mail, BSN, cijfers, grondslag nodig) en bijzondere persoonsgegevens (medisch, religie, etniciteit, geaardheid, nooit in AI); leerlingwerk eerst anonimiseren. Het bevroren model leert niet realtime van jouw gesprek.',
+      'EU AI Act artikel 4 gaat over AI-geletterdheid (AI literacy): een inspanningsverplichting voor aanbieders en gebruiksverantwoordelijken om te zorgen voor voldoende AI-geletterdheid, geen verbod en geen risicocategorie. Voor een school betekent dit docenten en leerlingen AI-geletterd maken.',
+      'Duurzaamheid bekijk je in het totaalplaatje via stroom, water en grondstoffen of e-waste; afzetten tegen alternatieven en de Jevons-paradox meewegen, niet eenzijdig afserveren of wegwuiven.',
+    ],
+    rodeVlaggen: [
+      'Buzzwords zonder inhoud: "AI is een black box", "AI hallucineert", "privacy is belangrijk", "denk aan de duurzaamheid", zonder concrete invulling.',
+      'Risico\'s als absoluut stellen ("AI is niet duurzaam", "AI is diefstal", "AI maakt leerlingen dommer") zonder de nuance of het tegenvoorbeeld.',
+      'Feiten over de EU AI Act door elkaar halen (artikel 4 koppelen aan risicocategorieen of verboden in plaats van aan AI-geletterdheid).',
+      'Beweren dat een chatbot onthoudt wat je typt en dat anderen dat kunnen opvragen (privacy-misvatting over het bevroren model).',
+      'Geen onderscheid maken tussen soorten persoonsgegevens, of denken dat anonimiseren niet nodig is bij leerlingwerk.',
+      'Misinformatie en desinformatie verwarren, of intentie toeschrijven aan het model.',
+      'AI weren uit het onderwijs bepleiten als oplossing, zonder de pedagogische afweging.',
+      'Cognitive offloading als puur slecht of puur goed behandelen, zonder de afweging per leerdoel.',
+    ],
+  },
+};

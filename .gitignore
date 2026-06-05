@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# webinar bronmateriaal (groot, o.a. 1.7GB mp4; gedestilleerd naar prompts/kennisbasis/)
+/context inhoud/

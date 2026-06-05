@@ -89,6 +89,14 @@ User wil **uitsluitend via subagents** werken voor implementatie/review/test. Ho
 
 - **Lieke start niet** ([live] onclose direct na onopen). WebSocket gaat open en sluit direct, recorder blijft door audio sturen → veel "WebSocket already CLOSED" errors. Hypothese: model `gemini-3.1-flash-live` bestaat niet op Google's eind. Debug-stap: console.log toegevoegd in `hooks/useLiveSession.ts` voor onopen/onclose met code/reason. User moet de uitgeklapte close-event delen om te bevestigen.
 
+## Kennisbasis en prompts (contentverankerd)
+
+- **Kennisbasis:** `prompts/kennisbasis/webinar-1..5.md` bevat per webinar de ground truth voor examinator en beoordelaar (kernbegrippen, leerdoelen, praktijkvoorbeelden, misvattingen en rode vlaggen, plus per casus een beoordelingsaanwijzing in sectie 7).
+- **Kennismodule:** `lib/knowledge/` destilleert die bestanden tot data. `casus-cards.ts` (1A t/m 5D) geeft per vraag `waarOpLetten`, `goedAntwoord` en `misvatting`; `webinar-ground.ts` geeft per webinar `kernpunten` en `rodeVlaggen`. `index.ts` exporteert de helpers `getCasusCard(code)` en `getWebinarGround(webinar)`.
+- **Lieke (examinator):** prompt opgebouwd in `lib/bot/system-prompt.ts` uit de tekstblokken in `lib/bot/lieke-instructions.ts` (INTRO, DOCENTCONTEXT, GESPREKSVERLOOP, DOORVRAGEN, GENOEG GEHOORD, NIET DOEN, WEL DOEN, STUREN, ONDERWERPEN). Per onderwerp wordt via `getCasusCard` een prive aanwijzing ingevoegd die Lieke nooit voorleest. Lieke spreekt over "onderwerpen", niet over "casus".
+- **Beoordelaar (evaluator):** vaste system prompt in `lib/evaluator/system-prompt-text.ts`, user-prompt-builder in `lib/evaluator/prompt.ts`. De user prompt injecteert beoordelingsaanwijzingen per vraag en ground truth plus rode vlaggen per onderwerp uit `lib/knowledge`. Het JSON-schema (`lib/evaluator/schema.ts`) is ongewijzigd.
+- **Documentatie-mirrors:** `prompts/lieke-voice-prompt.md` en `prompts/beoordelaar-prompt.md` spiegelen de prompts. De oude (niet-verrijkte) prompts staan gearchiveerd in `prompts/_archief/2026-06-05-voor-verrijking/`.
+
 ## Conventies
 
 - Geen em-dashes in copy, comments, system prompts. Gebruik komma's of nieuwe zinnen.

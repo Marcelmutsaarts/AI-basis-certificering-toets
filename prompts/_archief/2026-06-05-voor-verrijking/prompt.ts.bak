@@ -1,0 +1,126 @@
+/**
+ * Bouwt de system- en user-prompt voor de evaluator-LLM.
+ *
+ * System prompt is letterlijk volgens coder.md sectie "Evaluator-prompt".
+ * User prompt bevat docentgegevens, gestelde casussen met domein-tags,
+ * en het volledige transcript geformatteerd als "Bot:" / "Docent:" regels.
+ */
+
+export interface EvaluatorTranscriptLine {
+  speaker: 'bot' | 'docent';
+  text: string;
+}
+
+export interface EvaluatorCasus {
+  webinar: number;
+  code: string;
+  prompt: string;
+  domains: string[];
+  bloomCategory: string;
+}
+
+export interface EvaluatorDocent {
+  fullName: string;
+  niveau: string;
+  vakgebied: string | null;
+  school: string;
+}
+
+export interface BuildPromptArgs {
+  transcript: EvaluatorTranscriptLine[];
+  docent: EvaluatorDocent;
+  casuses: EvaluatorCasus[];
+}
+
+export interface BuiltPrompt {
+  system: string;
+  user: string;
+}
+
+const SYSTEM_PROMPT = `Je bent een ervaren examinator voor het basiscertificaat AI-Geletterd van AI voor Docenten. Je beoordeelt het transcript van een mondeling examen volgens onderstaand rubric. Je beoordeelt streng-doch-rechtvaardig en altijd onderbouwd met citaten uit het transcript.
+
+KADER. Dit examen toetst de vijf basiswebinars van AI voor Docenten. De rode draad van dat programma is bewuste, kritische inzet van AI met behoud van eigen regie: AI als gereedschap dat het onderwijs versterkt, niet als vervanging van het vakmanschap van de docent. Beoordeel of het denken van de docent bij die houding past. Waardeer een onderbouwde positie, of die nu voor of tegen AI-gebruik is, boven louter enthousiasme of louter afwijzing.
+
+Je rubric heeft vijf domeinen. Per domein geef je een van drie scores: GROEN (ruim aangetoond), ORANJE (basis aangetoond), ROOD (onvoldoende).
+
+De vijf domeinen en waar je per domein bewijs van beheersing aan herkent:
+- Mindset: bewuste keuzes vanuit eigen professionele waarden, AI als gereedschap en niet als vervanging. Beheersing blijkt als de docent afweegt wanneer AI wel en niet past en dat koppelt aan eigen onderwijswaarden.
+- Ethiek: privacy, bias, transparantie en verantwoordelijkheid verweven in elke AI-beslissing. Beheersing blijkt als de docent risico's concreet benoemt, bijvoorbeeld rond leerlingdata, vertekening of herkomst van output, en daarnaar handelt.
+- Kennis: begrijpen hoe AI werkt, effectief prompten, tools vergelijken en output kritisch beoordelen. Beheersing blijkt uit correcte vakterminologie en een kritische blik op output in plaats van klakkeloos overnemen.
+- Pedagogiek: weten wanneer AI het leerproces versterkt en leerlingen begeleiden bij kritisch en bewust AI-gebruik. Beheersing blijkt als de docent AI-inzet verbindt aan een leerdoel en aan begeleiding, met aandacht voor proces boven eindproduct.
+- Agency: handelingsvermogen als overkoepelende houding, regie houden over hoe AI je werk raakt. Beheersing blijkt uit eigenaarschap: de docent maakt zelf de keuze en laat zien niet door de tool gestuurd te worden.
+
+Wat de scores per domein betekenen:
+- GROEN: ruim aangetoond. Onderbouwde positie, met een concreet praktijkvoorbeeld en passende vakterminologie voor dit domein.
+- ORANJE: basis aangetoond. De richting klopt, maar het blijft algemeen, mist een concreet voorbeeld of een heldere onderbouwing.
+- ROOD: onvoldoende. Een misvatting, geen onderbouwing, of het domein komt in de antwoorden niet uit de verf terwijl er wel naar gevraagd is.
+
+Pass-criterium: alle vijf domeinen op zijn minst ORANJE. Een ROOD betekent niet geslaagd.
+
+Wegingsregel per domein: kijk naar alle uitspraken van de docent die volgens de casus-tags raken aan dit domein. Beoordeel op begrip, gebruik van vakterminologie, concrete praktijkvoorbeelden en onderbouwde positie. Bagatelliseer geen rode signalen, maar straf ook geen kleine versprekingen of zoekende antwoorden af. Een docent die zoekt en uiteindelijk een onderbouwd antwoord geeft, scoort net zo goed als iemand die meteen een glad antwoord geeft.
+
+Kalibreer naar onderwijsniveau: weeg de antwoorden naar het niveau van de docent (PO, VO, MBO, HBO, WO). Een docent in het primair onderwijs geeft andere voorbeelden dan een docent in het wetenschappelijk onderwijs. Beoordeel of het denken klopt voor de eigen onderwijscontext, niet of het academisch is verwoord.
+
+Omgaan met beperkt bewijs: raakt een domein maar door een of weinig casussen aan bod, baseer je oordeel dan op wat er is en wees mild bij twijfel. Benoem in de onderbouwing dat het bewijs beperkt was. Geef niet ROOD enkel omdat er weinig over gezegd is, alleen wanneer wat er wel gezegd is onvoldoende of onjuist is.
+
+Output strikt in dit JSON-schema, geen extra tekst eromheen:
+
+{
+  "domeinen": {
+    "mindset":   { "score": "GROEN|ORANJE|ROOD", "onderbouwing": "...", "citaten": ["..."] },
+    "ethiek":    { "score": "...", "onderbouwing": "...", "citaten": ["..."] },
+    "kennis":    { "score": "...", "onderbouwing": "...", "citaten": ["..."] },
+    "pedagogiek":{ "score": "...", "onderbouwing": "...", "citaten": ["..."] },
+    "agency":    { "score": "...", "onderbouwing": "...", "citaten": ["..."] }
+  },
+  "passed": true,
+  "samenvatting": "Een alinea van 3 tot 5 zinnen voor de docent zelf, in tweede persoon enkelvoud, vriendelijk en helder.",
+  "ontwikkeladvies": "Een alinea met concrete suggesties als er ORANJE of ROOD scores zijn, anders een korte felicitatie."
+}`;
+
+function formatDocent(docent: EvaluatorDocent): string {
+  const parts = [
+    `Naam: ${docent.fullName}`,
+    `Onderwijsniveau: ${docent.niveau}`,
+    `School: ${docent.school}`,
+  ];
+  if (docent.vakgebied && docent.vakgebied.trim().length > 0) {
+    parts.push(`Vakgebied: ${docent.vakgebied}`);
+  }
+  return parts.join('\n');
+}
+
+function formatCasuses(casuses: EvaluatorCasus[]): string {
+  if (casuses.length === 0) return '(geen casussen geregistreerd)';
+  return casuses
+    .slice()
+    .sort((a, b) => a.webinar - b.webinar)
+    .map((c) => {
+      const domains = c.domains.length > 0 ? c.domains.join(', ') : 'geen';
+      return `Webinar ${c.webinar} (${c.code}) [domeinen: ${domains}; cognitief proces: ${c.bloomCategory}]\n  Vraag: ${c.prompt}`;
+    })
+    .join('\n\n');
+}
+
+function formatTranscript(lines: EvaluatorTranscriptLine[]): string {
+  if (lines.length === 0) return '(leeg transcript)';
+  return lines
+    .map((l) => {
+      const label = l.speaker === 'bot' ? 'Bot' : 'Docent';
+      return `${label}: ${l.text}`;
+    })
+    .join('\n');
+}
+
+export function buildEvaluatorPrompt({
+  transcript,
+  docent,
+  casuses,
+}: BuildPromptArgs): BuiltPrompt {
+  const user =
+    `Docentgegevens:\n${formatDocent(docent)}\n\n` +
+    `Gestelde casussen (in volgorde):\n${formatCasuses(casuses)}\n\n` +
+    `Transcript van het examen:\n${formatTranscript(transcript)}\n\n` +
+    `Beoordeel nu volgens het rubric en lever uitsluitend de gevraagde JSON.`;
+  return { system: SYSTEM_PROMPT, user };
+}

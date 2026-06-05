@@ -1,44 +1,17 @@
-# Beoordelaar (evaluator), prompts
+/**
+ * Vaste system-prompt-tekst voor de beoordelaar (evaluator).
+ *
+ * Bevat het kader, de vijf domeinen met herkenningspunten, de betekenis van
+ * GROEN/ORANJE/ROOD, het pass-criterium, de wegingsregel, niveau-kalibratie,
+ * omgaan met beperkt bewijs, omgaan met holle taal (met drie ijkvoorbeelden),
+ * de formatieve toon van het ontwikkeladvies, en het JSON-schemablok.
+ *
+ * Apart bestand zodat lib/evaluator/prompt.ts onder de regellimiet blijft.
+ * Het JSON-schema is letterlijk gelijk aan lib/evaluator/schema.ts en mag
+ * niet wijzigen.
+ */
 
-De prompts voor het beoordelaar-model dat na afloop het transcript scoort op
-het rubric en het JSON-resultaat teruggeeft. Dit is een apart, tekstgebaseerd
-model (niet de spraak-bot).
-
-- **Bron in code:** de vaste system prompt staat in
-  `lib/evaluator/system-prompt-text.ts` (constante `SYSTEM_PROMPT`). De
-  user-prompt-builder staat in `lib/evaluator/prompt.ts` (functie
-  `buildEvaluatorPrompt`).
-- **Kennisinjectie:** de user prompt haalt via `getCasusCard` en
-  `getWebinarGround` uit `lib/knowledge` per vraag een beoordelingsaanwijzing
-  en per onderwerp ground truth plus rode vlaggen op.
-- **Model:** `google/gemini-3.1-pro-preview` via OpenRouter (env `MODEL_EVALUATOR`)
-- De evaluator krijgt twee delen: een vaste **system prompt** en een per examen
-  opgebouwde **user prompt** (docentgegevens, gestelde casussen,
-  beoordelingsaanwijzingen, ground truth, rode vlaggen en het transcript).
-
-Het **JSON-output-contract is ongewijzigd** ten opzichte van eerdere versies.
-Het schema in de system prompt is letterlijk gelijk aan `lib/evaluator/schema.ts`
-(zie de schema-uitleg onderaan).
-
----
-
-## 1. System prompt (vast)
-
-Naast het kader, de vijf domeinen, de betekenis van de scores, het
-pass-criterium, de wegingsregel, de niveau-kalibratie en het omgaan met beperkt
-bewijs zijn er twee inhoudelijke blokken bijgekomen:
-
-- **Omgaan met holle taal en ingestudeerde antwoorden**, met drie korte
-  ijkvoorbeelden (een GROEN, een ORANJE en een ROOD) ter kalibratie. Dit blok
-  verwijst expliciet naar de beoordelingsaanwijzingen, ground truth en rode
-  vlaggen die per examen in de user prompt staan.
-- Een instructie dat het **ontwikkeladvies formatief** is: in de tweede persoon
-  enkelvoud, vriendelijk en concreet, per zwakker punt een suggestie en waar
-  passend een verwijzing naar het betreffende onderwerp uit de training. Ook bij
-  een geslaagd resultaat noemt het kort wat nog sterker kan.
-
-```text
-Je bent een ervaren examinator voor het basiscertificaat AI-Geletterd van AI voor Docenten. Je beoordeelt het transcript van een mondeling examen volgens onderstaand rubric. Je beoordeelt streng-doch-rechtvaardig en altijd onderbouwd met citaten uit het transcript.
+export const SYSTEM_PROMPT = `Je bent een ervaren examinator voor het basiscertificaat AI-Geletterd van AI voor Docenten. Je beoordeelt het transcript van een mondeling examen volgens onderstaand rubric. Je beoordeelt streng-doch-rechtvaardig en altijd onderbouwd met citaten uit het transcript.
 
 KADER. Dit examen toetst de vijf basiswebinars van AI voor Docenten. De rode draad van dat programma is bewuste, kritische inzet van AI met behoud van eigen regie: AI als gereedschap dat het onderwijs versterkt, niet als vervanging van het vakmanschap van de docent. Beoordeel of het denken van de docent bij die houding past. Waardeer een onderbouwde positie, of die nu voor of tegen AI-gebruik is, boven louter enthousiasme of louter afwijzing.
 
@@ -85,69 +58,4 @@ Output strikt in dit JSON-schema, geen extra tekst eromheen:
   "passed": true,
   "samenvatting": "Een alinea van 3 tot 5 zinnen voor de docent zelf, in tweede persoon enkelvoud, vriendelijk en helder.",
   "ontwikkeladvies": "Een alinea met concrete suggesties als er ORANJE of ROOD scores zijn, anders een korte felicitatie."
-}
-```
-
----
-
-## 2. User prompt (per examen opgebouwd)
-
-De user prompt heeft nu twee extra secties tussen de gestelde casussen en het
-transcript: de **beoordelingsaanwijzingen per gestelde vraag** (uit de
-casuskaarten) en de **ground truth en rode vlaggen per onderwerp** (uit
-`getWebinarGround`). Beide worden alleen opgenomen als er kennis voor beschikbaar
-is. De volgorde van de secties is: docentgegevens, gestelde casussen,
-beoordelingsaanwijzingen, ground truth, transcript, slotinstructie.
-
-`{{...}}` markeert waarden die worden ingevuld vanuit de database en de
-kennismodule.
-
-```text
-Docentgegevens:
-Naam: {{naam}}
-Onderwijsniveau: {{niveau}}
-School: {{school}}
-Vakgebied: {{vakgebied}}
-
-Gestelde casussen (in volgorde):
-Webinar {{n}} ({{code}}) [domeinen: {{domeinen}}; cognitief proces: {{bloomCategory}}]
-  Vraag: {{casusvraag}}
-
-[... per casus herhaald, gesorteerd op webinar-nummer ...]
-
-Beoordelingsaanwijzingen per gestelde vraag (ijkpunt, geen checklist om af te vinken):
-Vraag {{code}}. Let op: {{waarOpLetten}} Een sterk antwoord bevat ongeveer: {{goedAntwoord}} Veelvoorkomend misverstand: {{misvatting}}
-
-[... per gestelde vraag een regel, gesorteerd op webinar-nummer ...]
-
-Ground truth per onderwerp (waar een correct antwoord op aansluit) en rode vlaggen voor oppervlakkige antwoorden:
-{{titel webinar}}.
-  Kernpunten: {{kernpunten samengevoegd}}
-  Rode vlaggen: {{rode vlaggen samengevoegd}}
-
-[... per uniek webinar een blok, gesorteerd op webinar-nummer ...]
-
-Transcript van het examen:
-Bot: {{wat Lieke zei}}
-Docent: {{wat de docent zei}}
-Bot: {{...}}
-Docent: {{...}}
-
-[... volledige transcript, regel per regel ...]
-
-Beoordeel nu volgens het rubric en lever uitsluitend de gevraagde JSON.
-```
-
----
-
-## Toelichting
-
-| Onderdeel | Waar komt het vandaan |
-|---|---|
-| Docentgegevens | Profiel van de docent (`profiles`). De regel `Vakgebied:` valt weg als er geen vakgebied is ingevuld. |
-| Gestelde casussen | De vijf casussen die in dit examen aan bod kwamen (`casuses`), gesorteerd op webinar-nummer. |
-| Beoordelingsaanwijzingen | Per gestelde vraag de casuskaart (`getCasusCard` uit `lib/knowledge`): waar op te letten, wat een sterk antwoord bevat en een veelvoorkomend misverstand. Gedestilleerd uit `prompts/kennisbasis/webinar-1..5.md`. |
-| Ground truth en rode vlaggen | Per uniek webinar (`getWebinarGround` uit `lib/knowledge`): de feitelijke kernpunten waar een correct antwoord op aansluit en de rode vlaggen voor oppervlakkige of ingestudeerde antwoorden. |
-| Transcript | Alle transcriptregels (`transcripts`), als `Bot:` / `Docent:` regels. Audio wordt nooit bewaard, alleen deze tekst. |
-| Domeindefinities | De vijf domeinen in de system prompt komen overeen met `lib/domains/framework.ts`. |
-| JSON-output | Wordt gevalideerd tegen een Zod-schema (`lib/evaluator/schema.ts`) en opgeslagen in `evaluations`. Het schema is ongewijzigd ten opzichte van de eerdere prompt-versie. |
+}`;
