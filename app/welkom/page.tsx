@@ -25,10 +25,8 @@ export default async function WelkomPage() {
     .eq('user_id', user.id)
     .maybeSingle();
 
-  if (profile?.role === 'admin') {
-    redirect('/admin');
-  }
-
+  // Een voltooid profiel (ook van een admin) gaat door naar /start en ziet het
+  // formulier niet opnieuw. Admins zonder school of niveau krijgen het wel.
   if (profile?.school && profile?.niveau) {
     redirect('/start');
   }
