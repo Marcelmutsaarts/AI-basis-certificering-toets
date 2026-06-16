@@ -41,6 +41,7 @@ Gevuld:
 - `SUPABASE_SERVICE_ROLE_KEY` (service_role JWT, bypass RLS, server-only)
 - `GOOGLE_AI_STUDIO_API_KEY`
 - `OPENROUTER_API_KEY`
+- `RESEND_API_KEY` (send-only, server-only, alleen gelezen in `lib/mail/client.ts`), `MAIL_FROM` (`onboarding@resend.dev`), `MAIL_TO_AVD` (`info@aivoordocenten.nl`) voor de resultaatmail. LET OP: deze 3 moeten ook in Vercel (Production) gezet worden, anders faalt versturen in productie.
 
 Leeg (komen later van Thijs / productie):
 - `N8N_RESULT_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`

@@ -1,13 +1,13 @@
 'use client';
 
 /**
- * Facultatief feedbackveld op het resultaatscherm. De docent kan vrije tekst
- * achterlaten met feedback over de app. De waarde wordt opgeslagen op
- * exam_sessions.app_feedback via de browser-client. De RLS-policy
- * sessions_own_update staat de eigen sessie-update toe.
+ * Afrond-blok op het resultaatscherm. De docent kan optioneel feedback over
+ * de app achterlaten en verstuurt zijn resultaat per mail naar het AVD-team.
  *
- * De opslag-logica zit in saveAppFeedback zodat een latere verstuurknop
- * (Resend-mail) exact dezelfde opslag kan hergebruiken.
+ * De feedback wordt opgeslagen op exam_sessions.app_feedback via de
+ * browser-client (RLS-policy sessions_own_update). De verstuurknop zit in
+ * een eigen subcomponent (SendResultButton) en hergebruikt saveAppFeedback
+ * zodat de actuele feedback meegaat in de mail.
  */
 import { useState, type FormEvent } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -15,10 +15,12 @@ import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/supabase/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { SendResultButton } from './SendResultButton';
 
 export interface AppFeedbackFormProps {
   sessionId: string;
   initialFeedback: string | null;
+  initialSentAt: string | null;
 }
 
 /**
@@ -50,6 +52,7 @@ type Status = 'idle' | 'pending' | 'saved' | 'error';
 export function AppFeedbackForm({
   sessionId,
   initialFeedback,
+  initialSentAt,
 }: AppFeedbackFormProps) {
   const supabase = createClient();
   const [feedback, setFeedback] = useState(initialFeedback ?? '');
@@ -65,11 +68,12 @@ export function AppFeedbackForm({
   return (
     <Card padding="md">
       <h2 className="text-base md:text-lg font-semibold text-purple-dark mb-2">
-        Feedback over de app, optioneel
+        Resultaat afronden
       </h2>
       <p className="text-sm text-text-body mb-3">
-        Je mag dit veld leeg laten. Je opmerkingen helpen ons de app te
-        verbeteren.
+        Geef hieronder optioneel feedback over de app, en verstuur daarna je
+        resultaat naar het AVD-team. Het team gebruikt de uitslag voor de
+        verdere afhandeling.
       </p>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3" noValidate>
         <label htmlFor="app-feedback" className="sr-only">
@@ -96,7 +100,7 @@ export function AppFeedbackForm({
         ) : null}
         {status === 'saved' ? (
           <p className="text-sm text-purple-dark font-medium">
-            Bedankt voor je feedback.
+            Bedankt, je feedback is bewaard.
           </p>
         ) : null}
         <Button
@@ -106,9 +110,17 @@ export function AppFeedbackForm({
           disabled={status === 'pending'}
           className="min-h-[44px] self-start"
         >
-          {status === 'pending' ? 'Bezig met opslaan' : 'Opslaan'}
+          {status === 'pending' ? 'Bezig met opslaan' : 'Alleen feedback bewaren'}
         </Button>
       </form>
+      <div className="mt-4 pt-4 border-t border-purple-primary/15">
+        <SendResultButton
+          supabase={supabase}
+          sessionId={sessionId}
+          getFeedback={() => feedback}
+          initialSentAt={initialSentAt}
+        />
+      </div>
     </Card>
   );
 }

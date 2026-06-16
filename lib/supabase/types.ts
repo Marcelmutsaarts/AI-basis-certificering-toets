@@ -61,6 +61,7 @@ export type Database = {
           live_session_id: string | null;
           casus_ids: string[] | null;
           app_feedback: string | null;
+          result_email_sent_at: string | null;
         };
         Insert: {
           id?: string;
@@ -71,6 +72,7 @@ export type Database = {
           live_session_id?: string | null;
           casus_ids?: string[] | null;
           app_feedback?: string | null;
+          result_email_sent_at?: string | null;
         };
         Update: {
           id?: string;
@@ -81,6 +83,7 @@ export type Database = {
           live_session_id?: string | null;
           casus_ids?: string[] | null;
           app_feedback?: string | null;
+          result_email_sent_at?: string | null;
         };
         Relationships: [];
       };
