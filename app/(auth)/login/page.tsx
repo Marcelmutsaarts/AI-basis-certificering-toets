@@ -1,13 +1,15 @@
 'use client';
 
 /**
- * Login-scherm. Email plus wachtwoord, onSubmit met preventDefault.
+ * Login-scherm. Email plus 4-cijferige inlogcode, onSubmit met preventDefault.
+ * De code wordt via codeToPassword naar het Supabase-wachtwoord vertaald.
  * Bij succes: update profiles.last_login_at, dan replace naar /start.
  * Bij fout: error-state boven het formulier.
  */
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { codeToPassword, normalizeCode } from '@/lib/auth/code-password';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -15,7 +17,7 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,19 +25,21 @@ export default function LoginPage() {
     event.preventDefault();
     setError(null);
 
-    if (!email.trim() || !password) {
-      setError('Vul je e-mailadres en wachtwoord in.');
+    const cleanCode = normalizeCode(code);
+    if (!email.trim() || cleanCode.length !== 4) {
+      setError('Vul je e-mailadres en je 4-cijferige inlogcode in.');
       return;
     }
 
     setPending(true);
-    const { data, error: signInError } = await supabase.auth.signInWithPassword(
-      { email: email.trim(), password }
-    );
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password: codeToPassword(cleanCode),
+    });
 
     if (signInError || !data.user) {
       setPending(false);
-      setError('Inloggen mislukt. Controleer je e-mailadres en wachtwoord.');
+      setError('Inloggen mislukt. Controleer je e-mailadres en inlogcode.');
       return;
     }
 
@@ -67,6 +71,10 @@ export default function LoginPage() {
             <h2 className="text-base md:text-lg font-semibold text-text-body">
               Inloggen
             </h2>
+            <p className="text-sm text-text-body">
+              Log in met je e-mailadres en de 4-cijferige inlogcode die je per
+              mail hebt ontvangen.
+            </p>
 
             {error ? (
               <div
@@ -90,15 +98,18 @@ export default function LoginPage() {
               />
             </label>
 
-            <label htmlFor="password" className="flex flex-col gap-1 text-sm text-text-body">
-              <span className="font-medium">Wachtwoord</span>
+            <label htmlFor="code" className="flex flex-col gap-1 text-sm text-text-body">
+              <span className="font-medium">Inlogcode</span>
               <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="rounded-xl border border-purple-primary/20 px-4 py-3 text-base focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/30"
+                id="code"
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                autoComplete="one-time-code"
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+                className="rounded-xl border border-purple-primary/20 px-4 py-3 text-base tracking-widest focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/30"
+                placeholder="1234"
               />
             </label>
 

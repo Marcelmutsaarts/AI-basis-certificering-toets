@@ -14,8 +14,9 @@ export interface SessionRowData {
   startedAt: string;
   status: Status;
   fullName: string;
-  school: string;
-  niveau: Niveau;
+  // school en niveau mogen null zijn voor nog-niet-onboarded accounts.
+  school: string | null;
+  niveau: Niveau | null;
   passed: boolean | null;
 }
 
@@ -78,9 +79,9 @@ export function SessionRow({ data }: { data: SessionRowData }) {
         >
           {data.fullName}
         </Link>
-        <div className="text-xs text-text-body/70">{data.school}</div>
+        <div className="text-xs text-text-body/70">{data.school ?? 'onbekend'}</div>
       </td>
-      <td className="px-3 py-3 text-sm text-text-body">{data.niveau}</td>
+      <td className="px-3 py-3 text-sm text-text-body">{data.niveau ?? '-'}</td>
       <td className="px-3 py-3">
         <StatusPill status={data.status} />
       </td>

@@ -57,11 +57,20 @@ async function loadDocent(
   if (!data) {
     throw new Error('Profiel niet gevonden.');
   }
+  // niveau en school zijn post-onboarding altijd gevuld; deze coalesce is
+  // slechts een vangnet zodat de typing klopt met de nullable kolommen.
+  // Een leeg niveau betekent meestal een gefaalde onboarding-gate. Dat mag
+  // niet stil verdwijnen in productie, dus we loggen het met de user-id erbij.
+  if (!data.niveau) {
+    console.warn(
+      `Evaluator-context: leeg niveau voor user ${userId}. Onboarding-gate mogelijk gefaald.`
+    );
+  }
   return {
     fullName: data.full_name,
-    niveau: data.niveau,
+    niveau: data.niveau ?? '',
     vakgebied: data.vakgebied,
-    school: data.school,
+    school: data.school ?? '',
   };
 }
 

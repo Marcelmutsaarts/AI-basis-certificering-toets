@@ -12,8 +12,8 @@ export interface PayloadDocent {
   user_id: string;
   full_name: string;
   email: string;
-  school: string;
-  niveau: 'PO' | 'VO' | 'MBO' | 'HBO' | 'WO';
+  school: string | null;
+  niveau: 'PO' | 'VO' | 'MBO' | 'HBO' | 'WO' | null;
   vakgebied: string | null;
 }
 

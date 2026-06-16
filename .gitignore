@@ -43,3 +43,6 @@ next-env.d.ts
 
 # webinar bronmateriaal (groot, o.a. 1.7GB mp4; gedestilleerd naar prompts/kennisbasis/)
 /context inhoud/
+
+# deelnemer-seed met inlogcodes (geheimen, nooit committen)
+/supabase/participants.local.json

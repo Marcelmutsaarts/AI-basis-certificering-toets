@@ -78,7 +78,7 @@ export default async function AdminSessionDetailPage({ params }: PageProps) {
             fullName={profile?.full_name ?? '-'}
             email={email}
             school={profile?.school ?? '-'}
-            niveau={profile?.niveau ?? 'VO'}
+            niveau={profile?.niveau ?? null}
             vakgebied={profile?.vakgebied ?? null}
             role={profile?.role ?? 'docent'}
             startedAt={session.started_at}

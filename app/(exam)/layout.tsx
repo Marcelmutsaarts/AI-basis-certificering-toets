@@ -1,6 +1,9 @@
 /**
  * Layout voor het ingelogde examen-gedeelte.
- * Server component: redirect naar /login als er geen user is.
+ * Server component: redirect naar /login als er geen user is. Daarna een
+ * onboarding-gate: een deelnemer (docent of tester) zonder school of niveau
+ * gaat eerst naar /welkom om die in te vullen. Admins slaan dit over. De route
+ * /welkom valt buiten deze layout, dus er ontstaat geen redirect-loop.
  */
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -18,6 +21,16 @@ export default async function ExamLayout({
 
   if (!user) {
     redirect('/login');
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, school, niveau')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (profile?.role !== 'admin' && (!profile?.school || !profile?.niveau)) {
+    redirect('/welkom');
   }
 
   return (

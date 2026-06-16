@@ -25,8 +25,10 @@ interface JoinedRow {
   status: Database['public']['Enums']['exam_status'];
   user_id: string;
   full_name: string;
-  school: string;
-  niveau: Niveau;
+  // school en niveau zijn null voor accounts die nog niet onboarded zijn;
+  // de admin-lijst toont die rijen ook, dus null is hier legitiem.
+  school: string | null;
+  niveau: Niveau | null;
   role: Role;
   passed: boolean | null;
 }

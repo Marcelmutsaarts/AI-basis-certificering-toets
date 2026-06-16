@@ -21,8 +21,8 @@ export type Database = {
           user_id: string;
           full_name: string;
           role: Database['public']['Enums']['user_role'];
-          school: string;
-          niveau: Database['public']['Enums']['onderwijsniveau'];
+          school: string | null;
+          niveau: Database['public']['Enums']['onderwijsniveau'] | null;
           vakgebied: string | null;
           created_at: string;
           last_login_at: string | null;
@@ -32,8 +32,8 @@ export type Database = {
           user_id: string;
           full_name: string;
           role?: Database['public']['Enums']['user_role'];
-          school: string;
-          niveau: Database['public']['Enums']['onderwijsniveau'];
+          school?: string | null;
+          niveau?: Database['public']['Enums']['onderwijsniveau'] | null;
           vakgebied?: string | null;
           created_at?: string;
           last_login_at?: string | null;
@@ -43,8 +43,8 @@ export type Database = {
           user_id?: string;
           full_name?: string;
           role?: Database['public']['Enums']['user_role'];
-          school?: string;
-          niveau?: Database['public']['Enums']['onderwijsniveau'];
+          school?: string | null;
+          niveau?: Database['public']['Enums']['onderwijsniveau'] | null;
           vakgebied?: string | null;
           created_at?: string;
           last_login_at?: string | null;

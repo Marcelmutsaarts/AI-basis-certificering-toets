@@ -72,6 +72,15 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+  // Niveau is gegarandeerd gevuld zodra een deelnemer langs de onboarding-gate
+  // in (exam)/layout is. Deze guard dekt het onbereikbare directe-call-geval af
+  // en narrowt niveau naar string voor buildSystemPrompt.
+  if (!profile.niveau) {
+    return NextResponse.json(
+      { error: 'Profiel onvolledig. Vul eerst school en niveau in.' },
+      { status: 400 }
+    );
+  }
 
   const { data: casusRows, error: casusError } = await supabase
     .from('casuses')

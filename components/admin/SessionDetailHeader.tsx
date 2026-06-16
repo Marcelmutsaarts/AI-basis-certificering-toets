@@ -10,7 +10,8 @@ export interface SessionDetailHeaderProps {
   fullName: string;
   email: string;
   school: string;
-  niveau: Niveau;
+  // niveau mag null zijn voor nog-niet-onboarded accounts; we tonen dan '-'.
+  niveau: Niveau | null;
   vakgebied: string | null;
   role: Database['public']['Enums']['user_role'];
   startedAt: string;
@@ -63,7 +64,7 @@ export function SessionDetailHeader(props: SessionDetailHeaderProps) {
         <Field label="Docent" value={props.fullName} />
         <Field label="E-mail" value={props.email || '-'} />
         <Field label="School" value={props.school} />
-        <Field label="Niveau" value={props.niveau} />
+        <Field label="Niveau" value={props.niveau || '-'} />
         <Field label="Vakgebied" value={props.vakgebied || '-'} />
         <Field label="Rol" value={props.role} />
         <Field label="Status" value={props.status.replace('_', ' ')} />
