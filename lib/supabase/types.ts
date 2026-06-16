@@ -60,6 +60,7 @@ export type Database = {
           status: Database['public']['Enums']['exam_status'];
           live_session_id: string | null;
           casus_ids: string[] | null;
+          app_feedback: string | null;
         };
         Insert: {
           id?: string;
@@ -69,6 +70,7 @@ export type Database = {
           status?: Database['public']['Enums']['exam_status'];
           live_session_id?: string | null;
           casus_ids?: string[] | null;
+          app_feedback?: string | null;
         };
         Update: {
           id?: string;
@@ -78,6 +80,7 @@ export type Database = {
           status?: Database['public']['Enums']['exam_status'];
           live_session_id?: string | null;
           casus_ids?: string[] | null;
+          app_feedback?: string | null;
         };
         Relationships: [];
       };

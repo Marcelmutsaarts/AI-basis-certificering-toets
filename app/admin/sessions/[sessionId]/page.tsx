@@ -148,6 +148,21 @@ export default async function AdminSessionDetailPage({ params }: PageProps) {
 
           <Card padding="md">
             <h2 className="text-lg font-semibold text-purple-dark mb-3">
+              App-feedback van docent
+            </h2>
+            {session.app_feedback ? (
+              <p className="text-sm leading-relaxed text-text-body whitespace-pre-wrap">
+                {session.app_feedback}
+              </p>
+            ) : (
+              <p className="text-sm text-text-body/70">
+                Geen feedback gegeven.
+              </p>
+            )}
+          </Card>
+
+          <Card padding="md">
+            <h2 className="text-lg font-semibold text-purple-dark mb-3">
               Transcript
             </h2>
             <TranscriptList rows={transcripts ?? []} />

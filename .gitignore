@@ -46,3 +46,6 @@ next-env.d.ts
 
 # deelnemer-seed met inlogcodes (geheimen, nooit committen)
 /supabase/participants.local.json
+
+# bevat een Resend API key, niet committen (punt 2 voorbereiding)
+/INSTRUCTIE_RESEND_OPZETTEN.md

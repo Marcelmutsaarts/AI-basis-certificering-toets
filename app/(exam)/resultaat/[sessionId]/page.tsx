@@ -14,6 +14,7 @@ import { DotsPattern } from '@/components/ui/DotsPattern';
 import { PassFailHeader } from '@/components/result/PassFailHeader';
 import { DomainList } from '@/components/result/DomainList';
 import { EvaluatorTrigger } from '@/components/result/EvaluatorTrigger';
+import { AppFeedbackForm } from '@/components/result/AppFeedbackForm';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import {
   EvaluatorOutputSchema,
@@ -36,7 +37,7 @@ export default async function ResultaatPage({ params }: PageProps) {
 
   const { data: session } = await supabase
     .from('exam_sessions')
-    .select('id, user_id, status')
+    .select('id, user_id, status, app_feedback')
     .eq('id', sessionId)
     .maybeSingle();
   if (!session) notFound();
@@ -69,15 +70,23 @@ export default async function ResultaatPage({ params }: PageProps) {
     return <RenderFallbackError />;
   }
 
-  return <ResultBody output={parsed.data} sessionId={sessionId} />;
+  return (
+    <ResultBody
+      output={parsed.data}
+      sessionId={sessionId}
+      appFeedback={session.app_feedback}
+    />
+  );
 }
 
 function ResultBody({
   output,
   sessionId,
+  appFeedback,
 }: {
   output: EvaluatorOutput;
   sessionId: string;
+  appFeedback: string | null;
 }) {
   return (
     <main className="relative flex-1 px-4 md:px-12 py-8 md:py-12 overflow-hidden">
@@ -104,6 +113,7 @@ function ResultBody({
             {output.ontwikkeladvies}
           </p>
         </Card>
+        <AppFeedbackForm sessionId={sessionId} initialFeedback={appFeedback} />
         <div className="flex flex-col sm:flex-row sm:justify-center gap-3 pt-2">
           <Link
             href={`/transcript/${sessionId}`}
