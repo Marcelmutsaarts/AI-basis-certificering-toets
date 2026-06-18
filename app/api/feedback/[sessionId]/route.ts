@@ -24,9 +24,8 @@ const ParamsSchema = z.object({ sessionId: z.string().uuid() });
 
 const BodySchema = z.object({
   rating: z.number().int().min(1).max(5).nullable(),
-  start: z.string().max(2000).nullable(),
-  stop: z.string().max(2000).nullable(),
-  continue: z.string().max(2000).nullable(),
+  positief: z.string().max(2000).nullable(),
+  negatief: z.string().max(2000).nullable(),
 });
 
 interface RouteContext {
@@ -79,9 +78,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     .from('exam_sessions')
     .update({
       feedback_rating: body.rating,
-      feedback_start: schoon(body.start),
-      feedback_stop: schoon(body.stop),
-      feedback_continue: schoon(body.continue),
+      feedback_positief: schoon(body.positief),
+      feedback_negatief: schoon(body.negatief),
       feedback_submitted_at: new Date().toISOString(),
     })
     .eq('id', sessionId)

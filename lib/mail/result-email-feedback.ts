@@ -7,14 +7,13 @@ import { esc } from './escape';
 
 export interface DocentFeedback {
   rating: number | null;
-  start: string | null;
-  stop: string | null;
-  continue: string | null;
+  positief: string | null;
+  negatief: string | null;
 }
 
 // True als de docent niets heeft ingevuld (rating noch teksten).
 export function feedbackLeeg(f: DocentFeedback): boolean {
-  const tekstLeeg = [f.start, f.stop, f.continue].every(
+  const tekstLeeg = [f.positief, f.negatief].every(
     (t) => !t || t.trim().length === 0
   );
   return f.rating === null && tekstLeeg;
@@ -40,9 +39,8 @@ export function buildFeedbackHtml(f: DocentFeedback): string {
       : '';
   const body = [
     rating,
-    feedbackRegelHtml('Starten met', f.start),
-    feedbackRegelHtml('Stoppen met', f.stop),
-    feedbackRegelHtml('Doorgaan met', f.continue),
+    feedbackRegelHtml('Wat ging goed', f.positief),
+    feedbackRegelHtml('Wat kan beter', f.negatief),
   ].join('');
   return `${titel}${body}`;
 }
@@ -51,10 +49,11 @@ export function feedbackText(f: DocentFeedback): string {
   if (feedbackLeeg(f)) return 'Geen feedback gegeven.';
   const regels: string[] = [];
   if (f.rating !== null) regels.push(`Waardering: ${f.rating} van 5`);
-  if (f.start && f.start.trim().length > 0) regels.push(`Starten met: ${f.start}`);
-  if (f.stop && f.stop.trim().length > 0) regels.push(`Stoppen met: ${f.stop}`);
-  if (f.continue && f.continue.trim().length > 0) {
-    regels.push(`Doorgaan met: ${f.continue}`);
+  if (f.positief && f.positief.trim().length > 0) {
+    regels.push(`Wat ging goed: ${f.positief}`);
+  }
+  if (f.negatief && f.negatief.trim().length > 0) {
+    regels.push(`Wat kan beter: ${f.negatief}`);
   }
   return regels.join('\n');
 }

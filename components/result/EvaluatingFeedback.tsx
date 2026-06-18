@@ -24,7 +24,7 @@ import {
 
 type EvalStatus = 'pending' | 'done' | 'error';
 
-const LEEG: FeedbackState = { rating: null, start: '', stop: '', continue: '' };
+const LEEG: FeedbackState = { rating: null, positief: '', negatief: '' };
 
 export function EvaluatingFeedback({ sessionId }: { sessionId: string }) {
   const router = useRouter();
@@ -77,9 +77,8 @@ export function EvaluatingFeedback({ sessionId }: { sessionId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           rating: state.rating,
-          start: state.start,
-          stop: state.stop,
-          continue: state.continue,
+          positief: state.positief,
+          negatief: state.negatief,
         }),
       });
     } catch (err) {

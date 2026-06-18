@@ -43,7 +43,7 @@ async function loadSession(supabase: Supa, sessionId: string) {
   return supabase
     .from('exam_sessions')
     .select(
-      'id, user_id, started_at, ended_at, result_email_sent_at, feedback_rating, feedback_start, feedback_stop, feedback_continue'
+      'id, user_id, started_at, ended_at, result_email_sent_at, feedback_rating, feedback_positief, feedback_negatief'
     )
     .eq('id', sessionId)
     .maybeSingle();
@@ -159,9 +159,8 @@ export async function POST(_request: NextRequest, context: RouteContext) {
     output: parsed.data,
     feedback: {
       rating: session.feedback_rating,
-      start: session.feedback_start,
-      stop: session.feedback_stop,
-      continue: session.feedback_continue,
+      positief: session.feedback_positief,
+      negatief: session.feedback_negatief,
     },
     voltooidOp: session.ended_at ?? session.started_at,
   });

@@ -149,9 +149,8 @@ export default async function AdminSessionDetailPage({ params }: PageProps) {
 
           <SessionFeedbackCard
             rating={session.feedback_rating}
-            start={session.feedback_start}
-            stop={session.feedback_stop}
-            doorgaan={session.feedback_continue}
+            positief={session.feedback_positief}
+            negatief={session.feedback_negatief}
           />
 
           <Card padding="md">

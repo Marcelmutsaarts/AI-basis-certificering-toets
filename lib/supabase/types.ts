@@ -63,9 +63,8 @@ export type Database = {
           app_feedback: string | null;
           result_email_sent_at: string | null;
           feedback_rating: number | null;
-          feedback_start: string | null;
-          feedback_stop: string | null;
-          feedback_continue: string | null;
+          feedback_positief: string | null;
+          feedback_negatief: string | null;
           feedback_submitted_at: string | null;
         };
         Insert: {
@@ -79,9 +78,8 @@ export type Database = {
           app_feedback?: string | null;
           result_email_sent_at?: string | null;
           feedback_rating?: number | null;
-          feedback_start?: string | null;
-          feedback_stop?: string | null;
-          feedback_continue?: string | null;
+          feedback_positief?: string | null;
+          feedback_negatief?: string | null;
           feedback_submitted_at?: string | null;
         };
         Update: {
@@ -95,9 +93,8 @@ export type Database = {
           app_feedback?: string | null;
           result_email_sent_at?: string | null;
           feedback_rating?: number | null;
-          feedback_start?: string | null;
-          feedback_stop?: string | null;
-          feedback_continue?: string | null;
+          feedback_positief?: string | null;
+          feedback_negatief?: string | null;
           feedback_submitted_at?: string | null;
         };
         Relationships: [];
