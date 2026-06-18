@@ -124,7 +124,7 @@ User wil **uitsluitend via subagents** werken voor implementatie/review/test. Ho
 - Audio: 16kHz PCM mono mic in (downsampling van browser samplerate), 24kHz PCM out via AudioContext.
 - Live transcripts via `inputTranscription` en `outputTranscription` callback events — niet zelf reconstrueren uit audio.
 - Eval idempotent via unique constraint op `evaluations.exam_session_id` (23505 fallback in persist).
-- Resultaatpagina is server component, triggert client `EvaluatorTrigger` als `evaluations` row mist, doet POST naar `/api/evaluate/[id]` en `router.refresh()`.
+- Resultaatpagina is server component; mist de `evaluations` row, dan rendert het client `EvaluatingFeedback`, dat de evaluator triggert (POST `/api/evaluate/[id]`) terwijl de docent een optionele feedback-flow doorloopt (smiley-rating plus start/stop/doorgaan, opgeslagen via `/api/feedback/[id]`), en pas op de knop "Laat me de resultaten zien" `router.refresh()` doet.
 - ExamScreen `beforeunload` -> `sendBeacon` naar `/api/exam-session/end` met `status='abandoned'` zodat browser-sluiten een schone status achterlaat.
 
 ## Git history

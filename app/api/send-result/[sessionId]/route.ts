@@ -23,7 +23,10 @@ import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/lib/supabase/types';
 import { EvaluatorOutputSchema } from '@/lib/evaluator/schema';
 import { verstuurResultaat } from '@/lib/mail/send-result';
-import type { ResultEmailPayload } from '@/lib/mail/result-email';
+import type {
+  ResultEmailPayload,
+  DocentFeedback,
+} from '@/lib/mail/result-email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,7 +43,7 @@ async function loadSession(supabase: Supa, sessionId: string) {
   return supabase
     .from('exam_sessions')
     .select(
-      'id, user_id, started_at, ended_at, app_feedback, result_email_sent_at'
+      'id, user_id, started_at, ended_at, result_email_sent_at, feedback_rating, feedback_start, feedback_stop, feedback_continue'
     )
     .eq('id', sessionId)
     .maybeSingle();
@@ -58,7 +61,7 @@ function buildPayload(args: {
   email: string;
   profile: { full_name: string; school: string | null; niveau: string | null; vakgebied: string | null } | null;
   output: z.infer<typeof EvaluatorOutputSchema>;
-  appFeedback: string | null;
+  feedback: DocentFeedback;
   voltooidOp: string;
 }): ResultEmailPayload {
   const { output, profile } = args;
@@ -83,7 +86,7 @@ function buildPayload(args: {
       samenvatting: output.samenvatting,
       ontwikkeladvies: output.ontwikkeladvies,
     },
-    appFeedback: args.appFeedback,
+    feedback: args.feedback,
     voltooidOp: args.voltooidOp,
     sessionId: args.sessionId,
   };
@@ -154,7 +157,12 @@ export async function POST(_request: NextRequest, context: RouteContext) {
     email: user.email ?? '',
     profile,
     output: parsed.data,
-    appFeedback: session.app_feedback,
+    feedback: {
+      rating: session.feedback_rating,
+      start: session.feedback_start,
+      stop: session.feedback_stop,
+      continue: session.feedback_continue,
+    },
     voltooidOp: session.ended_at ?? session.started_at,
   });
 

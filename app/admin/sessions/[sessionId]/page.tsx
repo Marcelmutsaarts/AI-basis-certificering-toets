@@ -14,6 +14,7 @@ import { SessionDetailHeader } from '@/components/admin/SessionDetailHeader';
 import { TranscriptList } from '@/components/admin/TranscriptList';
 import { WebhookStatus } from '@/components/admin/WebhookStatus';
 import { RetryButton } from '@/components/admin/RetryButton';
+import { SessionFeedbackCard } from '@/components/admin/SessionFeedbackCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,20 +147,12 @@ export default async function AdminSessionDetailPage({ params }: PageProps) {
             )}
           </Card>
 
-          <Card padding="md">
-            <h2 className="text-lg font-semibold text-purple-dark mb-3">
-              App-feedback van docent
-            </h2>
-            {session.app_feedback ? (
-              <p className="text-sm leading-relaxed text-text-body whitespace-pre-wrap">
-                {session.app_feedback}
-              </p>
-            ) : (
-              <p className="text-sm text-text-body/70">
-                Geen feedback gegeven.
-              </p>
-            )}
-          </Card>
+          <SessionFeedbackCard
+            rating={session.feedback_rating}
+            start={session.feedback_start}
+            stop={session.feedback_stop}
+            doorgaan={session.feedback_continue}
+          />
 
           <Card padding="md">
             <h2 className="text-lg font-semibold text-purple-dark mb-3">

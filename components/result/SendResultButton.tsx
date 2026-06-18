@@ -2,22 +2,17 @@
 
 /**
  * Primaire afrond-actie op het resultaatscherm. Verstuurt het resultaat per
- * mail naar het AVD-team. Vooraf wordt de actuele feedback opgeslagen zodat
- * die meegaat in de mail. Toont status: bezig, verstuurd met datum, of een
- * nette foutmelding bij een niet-200 respons.
+ * mail naar het AVD-team. Toont status: bezig, verstuurd met datum, of een
+ * nette foutmelding bij een niet-200 respons. De docent-feedback wordt
+ * elders verzameld (nakijk-flow), dus deze knop POST direct.
  */
 import { useState } from 'react';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/lib/supabase/types';
 import { Button } from '@/components/ui/Button';
-import { saveAppFeedback } from './AppFeedbackForm';
 
 type SendStatus = 'idle' | 'pending' | 'sent' | 'error';
 
 export interface SendResultButtonProps {
-  supabase: SupabaseClient<Database>;
   sessionId: string;
-  getFeedback: () => string;
   initialSentAt: string | null;
 }
 
@@ -29,9 +24,7 @@ function formatDatumNL(iso: string): string {
 }
 
 export function SendResultButton({
-  supabase,
   sessionId,
-  getFeedback,
   initialSentAt,
 }: SendResultButtonProps) {
   const [status, setStatus] = useState<SendStatus>('idle');
@@ -41,7 +34,6 @@ export function SendResultButton({
   async function handleSend() {
     setStatus('pending');
     setErrorMsg(null);
-    await saveAppFeedback(supabase, sessionId, getFeedback());
     try {
       const res = await fetch(`/api/send-result/${sessionId}`, { method: 'POST' });
       const body = await res.json().catch(() => null);

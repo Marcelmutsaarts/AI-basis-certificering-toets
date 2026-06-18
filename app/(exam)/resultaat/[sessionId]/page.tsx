@@ -2,9 +2,11 @@
  * Resultaatscherm. Server component:
  *  - auth + ownership check
  *  - leest evaluations row. Bestaat -> render rubric.
- *  - Bestaat niet -> render EvaluatorTrigger (client) die /api/evaluate
- *    aanroept en bij succes router.refresh() draait. Server route is
- *    idempotent, dus dubbele triggers leveren niet dubbele rows op.
+ *  - Bestaat niet -> render EvaluatingFeedback (client). Die triggert
+ *    /api/evaluate op de achtergrond en laat de docent eerst een optionele
+ *    feedback-flow doorlopen. De uitslag wordt pas onthuld als de docent
+ *    daar zelf op klikt. Server route is idempotent, dus dubbele triggers
+ *    leveren niet dubbele rows op.
  */
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -13,8 +15,8 @@ import { Card } from '@/components/ui/Card';
 import { DotsPattern } from '@/components/ui/DotsPattern';
 import { PassFailHeader } from '@/components/result/PassFailHeader';
 import { DomainList } from '@/components/result/DomainList';
-import { EvaluatorTrigger } from '@/components/result/EvaluatorTrigger';
-import { AppFeedbackForm } from '@/components/result/AppFeedbackForm';
+import { EvaluatingFeedback } from '@/components/result/EvaluatingFeedback';
+import { SendResultButton } from '@/components/result/SendResultButton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import {
   EvaluatorOutputSchema,
@@ -37,7 +39,7 @@ export default async function ResultaatPage({ params }: PageProps) {
 
   const { data: session } = await supabase
     .from('exam_sessions')
-    .select('id, user_id, status, app_feedback, result_email_sent_at')
+    .select('id, user_id, status, result_email_sent_at')
     .eq('id', sessionId)
     .maybeSingle();
   if (!session) notFound();
@@ -57,7 +59,7 @@ export default async function ResultaatPage({ params }: PageProps) {
         <DotsPattern position="right" />
         <div className="relative z-10 w-full max-w-2xl">
           <ErrorBoundary>
-            <EvaluatorTrigger sessionId={sessionId} />
+            <EvaluatingFeedback sessionId={sessionId} />
           </ErrorBoundary>
         </div>
       </main>
@@ -74,7 +76,6 @@ export default async function ResultaatPage({ params }: PageProps) {
     <ResultBody
       output={parsed.data}
       sessionId={sessionId}
-      appFeedback={session.app_feedback}
       sentAt={session.result_email_sent_at}
     />
   );
@@ -83,12 +84,10 @@ export default async function ResultaatPage({ params }: PageProps) {
 function ResultBody({
   output,
   sessionId,
-  appFeedback,
   sentAt,
 }: {
   output: EvaluatorOutput;
   sessionId: string;
-  appFeedback: string | null;
   sentAt: string | null;
 }) {
   return (
@@ -116,11 +115,16 @@ function ResultBody({
             {output.ontwikkeladvies}
           </p>
         </Card>
-        <AppFeedbackForm
-          sessionId={sessionId}
-          initialFeedback={appFeedback}
-          initialSentAt={sentAt}
-        />
+        <Card padding="md">
+          <h2 className="text-base md:text-lg font-semibold text-purple-dark mb-2">
+            Resultaat afronden
+          </h2>
+          <p className="text-sm text-text-body mb-3">
+            Verstuur je resultaat naar het AVD-team. Het team gebruikt de
+            uitslag voor de verdere afhandeling.
+          </p>
+          <SendResultButton sessionId={sessionId} initialSentAt={sentAt} />
+        </Card>
         <div className="flex flex-col sm:flex-row sm:justify-center gap-3 pt-2">
           <Link
             href={`/transcript/${sessionId}`}

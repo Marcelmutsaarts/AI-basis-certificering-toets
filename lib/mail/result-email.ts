@@ -1,25 +1,21 @@
 /**
  * Mailtemplate voor de toetsuitslag richting het AVD-team. Server-only,
  * geen React. Alle dynamische waarden worden via esc() ge-escaped om
- * HTML-injectie te voorkomen, inclusief naam en app-feedback.
+ * HTML-injectie te voorkomen, inclusief naam en feedback-teksten.
  *
  * De payload spiegelt onze eigen data: docentgegevens plus het
- * rubric-oordeel per framework-domein in GROEN, ORANJE of ROOD.
+ * rubric-oordeel per framework-domein in GROEN, ORANJE of ROOD, en de
+ * gestructureerde feedback van de docent over de toetsvorm.
  */
 import type { Score } from '@/lib/evaluator/schema';
+import { esc } from './escape';
+import {
+  buildFeedbackHtml,
+  feedbackText,
+  type DocentFeedback,
+} from './result-email-feedback';
 
-const ESC: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-};
-
-function esc(s: unknown): string {
-  if (s === null || s === undefined) return '';
-  return String(s).replace(/[&<>"']/g, (m) => ESC[m]);
-}
+export type { DocentFeedback };
 
 export interface ResultEmailPayload {
   docent: {
@@ -41,7 +37,7 @@ export interface ResultEmailPayload {
     samenvatting: string;
     ontwikkeladvies: string;
   };
-  appFeedback: string | null;
+  feedback: DocentFeedback;
   voltooidOp: string;
   sessionId: string;
 }
@@ -105,13 +101,6 @@ function buildBlok(titel: string, tekst: string): string {
       <p style="margin:0;font-size:14px;white-space:pre-wrap">${esc(tekst)}</p>`;
 }
 
-function buildFeedbackHtml(feedback: string | null): string {
-  if (!feedback || feedback.trim().length === 0) {
-    return buildBlok('Feedback over de app', 'Geen feedback gegeven.');
-  }
-  return buildBlok('Feedback over de app', feedback);
-}
-
 export function buildHtml(p: ResultEmailPayload): string {
   const kop = p.uitslag.passed
     ? `<strong style="color:#059669">geslaagd</strong>`
@@ -132,7 +121,7 @@ export function buildHtml(p: ResultEmailPayload): string {
       <table style="width:100%;border-collapse:collapse;font-size:14px">${buildDomeinenHtml(p.uitslag.domeinen)}</table>
       ${buildBlok('Samenvatting', p.uitslag.samenvatting)}
       ${buildBlok('Ontwikkeladvies', p.uitslag.ontwikkeladvies)}
-      ${buildFeedbackHtml(p.appFeedback)}
+      ${buildFeedbackHtml(p.feedback)}
       <p style="font-size:11px;color:#898998;margin-top:24px;margin-bottom:0">Sessie ${esc(p.sessionId)}. Automatisch verstuurd vanaf de AVD toets-app.</p>
     </div>
   </div>
@@ -145,10 +134,7 @@ function domeinenText(d: ResultEmailPayload['uitslag']['domeinen']): string {
 }
 
 export function buildText(p: ResultEmailPayload): string {
-  const feedback =
-    p.appFeedback && p.appFeedback.trim().length > 0
-      ? p.appFeedback
-      : 'Geen feedback gegeven.';
+  const feedback = feedbackText(p.feedback);
   return `Toetsuitslag mondeling examen, AI voor Docenten
 
 Naam:        ${p.docent.naam}
@@ -168,7 +154,7 @@ ${p.uitslag.samenvatting}
 Ontwikkeladvies:
 ${p.uitslag.ontwikkeladvies}
 
-Feedback over de app:
+Feedback van de docent:
 ${feedback}
 
 Sessie ${p.sessionId}. Automatisch verstuurd vanaf de AVD toets-app.`;
