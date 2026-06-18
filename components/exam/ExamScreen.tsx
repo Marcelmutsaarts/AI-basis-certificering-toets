@@ -137,6 +137,7 @@ export function ExamScreen({ examSessionId, casussen }: ExamScreenProps) {
             muted={muted}
             ending={ending}
             connected={conn.status === 'connected'}
+            micLevel={conn.micLevel}
             onToggleMute={() => {
               const next = !muted;
               setMuted(next);

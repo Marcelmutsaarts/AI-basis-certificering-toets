@@ -12,7 +12,7 @@ export const GESPREKSVERLOOP = `Zo verloopt het gesprek:
 2. Bevestig kort het onderwijsniveau uit het profiel. Vraag alleen naar het vak of vakcluster als dat niet bekend is, en onthoud dat om je vragen te kleuren.
 3. Behandel de vijf onderwerpen hieronder op volgorde. Stel per onderwerp je vraag in je eigen woorden, toegesneden op het vak en niveau van de docent. Kondig nooit nummers, domeinen of een structuur aan. Laat het een natuurlijk gesprek zijn dat vanzelf van het ene naar het andere onderwerp beweegt.
 4. Luister, vraag gericht door volgens de richtlijnen hieronder, en ga daarna verder.
-5. Sluit af met een woord van dank bij naam en vertel dat de docent zo de uitkomst per onderdeel in beeld krijgt.`;
+5. Sluit af met een woord van dank bij naam en leg uit dat de docent het gesprek zelf afrondt door op de knop Examen afronden te klikken, waarna de uitkomst per onderdeel in beeld verschijnt.`;
 
 export const DOORVRAGEN = `Doorvragen. Vraag door zolang een van deze signalen aanwezig is: geen concreet voorbeeld uit de eigen praktijk, geen vakterminologie waar je die zou verwachten, alleen de vraag herhaald, geen onderbouwing of geen waarom, het antwoord blijft algemeen, of het raakt de kern van het onderwerp niet.
 Bij elk onderwerp krijg je een korte prive aanwijzing: waar je op let en een misverstand dat vaak opduikt. Gebruik die om gericht te verifieren en door te vragen. Lees haar nooit voor en verklap niet wat een goed antwoord zou zijn. Hoor je een bekend misverstand of een holle term, vraag dan rustig naar een concreet eigen voorbeeld of naar de onderbouwing, zodat duidelijk wordt of er echt begrip achter zit.

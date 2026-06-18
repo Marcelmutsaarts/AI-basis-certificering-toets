@@ -43,18 +43,44 @@ const SETUP_TIMEOUT_MS = 10_000;
 const INITIAL_GREETING_PROMPT =
   'De docent is aanwezig. Begin het examen met je welkomstwoord.';
 
+const LEVEL_THROTTLE_MS = 50; // ~20 updates per seconde
+
 export function useLiveSession(options: UseLiveSessionOptions = {}) {
   const [status, setStatus] = useState<LiveStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [micLevel, setMicLevel] = useState(0);
   const sessionRef = useRef<LiveSession | null>(null);
   const recorderRef = useRef<LiveRecorder | null>(null);
   const playerRef = useRef<LivePlayer | null>(null);
   const callbacksRef = useRef(options);
+  // Laatste mic-niveau gaat naar een ref; een timer pusht het hooguit
+  // ~20x/sec naar state, zo voorkomen we een re-render per audio-chunk.
+  const pendingLevelRef = useRef(0);
+  const levelTimerRef = useRef<number | null>(null);
   useEffect(() => {
     callbacksRef.current = options;
   }, [options]);
 
+  const startLevelTimer = useCallback(() => {
+    if (levelTimerRef.current !== null) return;
+    levelTimerRef.current = window.setInterval(() => {
+      setMicLevel((prev) =>
+        prev === pendingLevelRef.current ? prev : pendingLevelRef.current
+      );
+    }, LEVEL_THROTTLE_MS);
+  }, []);
+
+  const stopLevelTimer = useCallback(() => {
+    if (levelTimerRef.current !== null) {
+      window.clearInterval(levelTimerRef.current);
+      levelTimerRef.current = null;
+    }
+    pendingLevelRef.current = 0;
+    setMicLevel(0);
+  }, []);
+
   const cleanup = useCallback(() => {
+    stopLevelTimer();
     recorderRef.current?.stop();
     recorderRef.current = null;
     playerRef.current?.stop();
@@ -62,7 +88,7 @@ export function useLiveSession(options: UseLiveSessionOptions = {}) {
     sessionRef.current?.close();
     sessionRef.current = null;
     callbacksRef.current.onSpeaker?.(null);
-  }, []);
+  }, [stopLevelTimer]);
 
   const handleMessage = useCallback((message: LiveServerMessage) => {
     const sc = message.serverContent;
@@ -203,8 +229,12 @@ export function useLiveSession(options: UseLiveSessionOptions = {}) {
               console.warn('[live] sendRealtimeInput faalde, recorder gestopt', sendErr);
             }
           },
+          onLevel: (level) => {
+            pendingLevelRef.current = level;
+          },
         });
         recorderRef.current = recorder;
+        startLevelTimer();
         await recorder.start();
       } catch (err) {
         cleanup();
@@ -213,7 +243,7 @@ export function useLiveSession(options: UseLiveSessionOptions = {}) {
         setStatus('error');
       }
     },
-    [cleanup, handleMessage]
+    [cleanup, handleMessage, startLevelTimer]
   );
 
   const stop = useCallback(() => {
@@ -227,5 +257,5 @@ export function useLiveSession(options: UseLiveSessionOptions = {}) {
 
   useEffect(() => () => cleanup(), [cleanup]);
 
-  return { status, errorMessage, start, stop, setMuted };
+  return { status, errorMessage, micLevel, start, stop, setMuted };
 }

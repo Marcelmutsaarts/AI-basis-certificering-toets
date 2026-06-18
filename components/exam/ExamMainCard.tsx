@@ -9,11 +9,13 @@
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { MicButton } from './MicButton';
+import { MicLevelMeter } from './MicLevelMeter';
 
 export interface ExamMainCardProps {
   muted: boolean;
   ending: boolean;
   connected: boolean;
+  micLevel: number;
   onToggleMute: () => void;
   onStop: () => void;
   onAbort: () => void;
@@ -23,6 +25,7 @@ export function ExamMainCard({
   muted,
   ending,
   connected,
+  micLevel,
   onToggleMute,
   onStop,
   onAbort,
@@ -36,6 +39,7 @@ export function ExamMainCard({
             onToggle={onToggleMute}
             disabled={!connected}
           />
+          <MicLevelMeter level={micLevel} muted={muted} />
           <button
             type="button"
             onClick={onAbort}
@@ -45,15 +49,20 @@ export function ExamMainCard({
             Sessie afbreken
           </button>
         </div>
-        <Button
-          variant="secondary"
-          size="md"
-          onClick={onStop}
-          disabled={ending}
-          className="min-h-[44px]"
-        >
-          {ending ? 'Bezig met afronden' : 'Examen afronden'}
-        </Button>
+        <div className="flex flex-col items-end gap-1">
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={onStop}
+            disabled={ending}
+            className="min-h-[44px]"
+          >
+            {ending ? 'Bezig met afronden' : 'Examen afronden'}
+          </Button>
+          <p className="text-xs text-text-body/70 max-w-[16rem] text-right">
+            Klik hierop zodra Lieke het gesprek heeft afgerond.
+          </p>
+        </div>
       </div>
     </Card>
   );

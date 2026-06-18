@@ -2,6 +2,7 @@
  * Top-bar met AVD-branding, optionele docent-naam en log-uit-knop.
  * Server component: haalt profile via Supabase server client.
  */
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
 import { LogoutButton } from './LogoutButton';
 
@@ -24,14 +25,15 @@ export async function Header() {
   return (
     <header className="w-full bg-white border-b border-purple-light-bg">
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="inline-block w-3 h-3 rounded-full bg-purple-primary"
+        <div className="flex items-center">
+          <Image
+            src="/ai-voor-docenten-logo.png"
+            alt="AI voor Docenten"
+            width={655}
+            height={295}
+            priority
+            className="h-9 w-auto"
           />
-          <span className="font-semibold text-purple-dark text-lg">
-            AI voor Docenten
-          </span>
         </div>
         {user ? (
           <div className="flex items-center gap-4">

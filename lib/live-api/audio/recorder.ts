@@ -13,6 +13,9 @@ import { INPUT_SAMPLE_RATE } from '@/lib/bot/persona';
 
 export interface RecorderOptions {
   onChunk: (pcm: Int16Array) => void;
+  // Optioneel: genormaliseerd mic-niveau 0..1 (RMS) per chunk, voor een
+  // live niveaumeter. Raakt de send-pipeline niet; puur informatief.
+  onLevel?: (level: number) => void;
 }
 
 export class LiveRecorder {
@@ -73,6 +76,8 @@ export class LiveRecorder {
     this.stream?.getAudioTracks().forEach((track) => {
       track.enabled = !muted;
     });
+    // Bij muten zakt de meter direct naar nul; er komen geen chunks meer.
+    if (muted) this.options.onLevel?.(0);
   }
 
   private handleAudio(event: AudioProcessingEvent): void {
@@ -104,6 +109,24 @@ export class LiveRecorder {
       }
     }
     this.bufferLength -= written;
-    this.options.onChunk(floatsToInt16(merged));
+    const pcm = floatsToInt16(merged);
+    // Send-pipeline eerst, exact ongewijzigd. Daarna pas het niveau melden.
+    this.options.onChunk(pcm);
+    this.options.onLevel?.(rmsFromInt16(pcm));
   }
+}
+
+/**
+ * Genormaliseerd RMS-niveau (0..1) uit 16-bit PCM. Spraak haalt zelden 1.0,
+ * dus we schalen wat op zodat de meter prettig uitslaat zonder te clippen.
+ */
+function rmsFromInt16(pcm: Int16Array): number {
+  if (pcm.length === 0) return 0;
+  let sum = 0;
+  for (let i = 0; i < pcm.length; i += 1) {
+    const sample = pcm[i] / 0x8000;
+    sum += sample * sample;
+  }
+  const rms = Math.sqrt(sum / pcm.length);
+  return Math.min(1, rms * 4);
 }

@@ -31,6 +31,7 @@ export interface UseExamConnectionResult {
   status: LiveStatus;
   errorMessage: string | null;
   retrying: boolean;
+  micLevel: number;
   setMuted: (muted: boolean) => void;
   stop: () => void;
   manualRetry: () => Promise<void>;
@@ -112,6 +113,7 @@ export function useExamConnection({
     status: live.status,
     errorMessage: bootError ?? live.errorMessage,
     retrying,
+    micLevel: live.micLevel,
     setMuted: live.setMuted,
     stop: live.stop,
     manualRetry,
