@@ -29,11 +29,11 @@ export const CASUS_CARDS_1: Record<string, CasusCard> = {
     code: '1C',
     webinar: 1,
     waarOpLetten:
-      'Begrijpt de docent het verschil tussen een chatbot (geeft antwoord) en een agent (voert zelfstandig een taak uit, plant en controleert zelf), en kan hij de gevolgen voor het onderwijs duiden?',
+      'Begrijpt de docent het kernverschil tussen een chatbot (geeft op verzoek antwoord, per beurt) en een autonome agent (voert zelfstandig een taak uit, plant en controleert zelf)? Een doorkijk naar de gevolgen voor het onderwijs is mooi meegenomen, maar het draait om het verschil.',
     goedAntwoord:
-      'Een agent levert zelfstandig een product op zonder dat je elke stap stuurt, met gevolgen voor toetsing, het werk van de docent en de beroepspraktijk. De docent houdt regie en eigenaarschap over wat wel en niet wordt uitbesteed.',
+      'Een chatbot reageert per beurt op wat je vraagt; een agent werkt zelfstandig naar een doel toe zonder dat je elke stap stuurt. Bonus: de docent benoemt wat dat betekent voor zijn werk of voor toetsing.',
     misvatting:
-      'Chatbot en agent door elkaar halen, of agents puur als gemak zien zonder oog voor de impact op leren en toetsing.',
+      'Chatbot en agent door elkaar halen of als hetzelfde zien.',
   },
   '1D': {
     code: '1D',
