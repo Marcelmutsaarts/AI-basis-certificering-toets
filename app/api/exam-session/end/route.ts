@@ -51,12 +51,20 @@ export async function POST(request: NextRequest) {
   const targetStatus = parsed.status ?? 'completed';
   const endedAt = new Date().toISOString();
 
+  // Toegestane vorige status hangt af van het doel. Bewust afronden
+  // ('completed') mag een per ongeluk gezette 'abandoned' herstellen (een
+  // herlaad-beacon tijdens het examen). Een 'abandoned'-beacon mag daarentegen
+  // nooit een al afgerond of beoordeeld examen terugzetten, dus die telt alleen
+  // vanuit 'in_progress'.
+  const allowedFrom: ('completed' | 'abandoned' | 'in_progress' | 'evaluated')[] =
+    targetStatus === 'completed' ? ['in_progress', 'abandoned'] : ['in_progress'];
+
   const { error } = await supabase
     .from('exam_sessions')
     .update({ status: targetStatus, ended_at: endedAt })
     .eq('id', parsed.examSessionId)
     .eq('user_id', user.id)
-    .in('status', ['in_progress']);
+    .in('status', allowedFrom);
 
   if (error) {
     console.error('Sessie afsluiten mislukt', error.message);

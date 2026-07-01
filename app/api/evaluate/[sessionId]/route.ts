@@ -63,9 +63,21 @@ export async function POST(_request: NextRequest, context: RouteContext) {
     );
   }
 
-  if (ctx.session.status !== 'completed') {
+  // Beoordeel op het gesprek, niet op het status-label. Een echt gesprek is
+  // minstens een transcriptregel van de docent met niet-lege tekst.
+  const heeftEchtGesprek = ctx.transcript.some(
+    (line) => line.speaker === 'docent' && line.text.trim().length > 0
+  );
+  // Veilig omdat de evaluator alleen wordt aangeroepen nadat de docent het
+  // examen heeft afgerond (resultaatpagina). Een 'abandoned'-label met een
+  // echt transcript is dus een per ongeluk gemarkeerde, maar afgeronde sessie
+  // (herlaad-beacon), niet een echt afgebroken examen.
+  const beoordeelbaar =
+    ctx.session.status === 'completed' ||
+    (ctx.session.status === 'abandoned' && heeftEchtGesprek);
+  if (!beoordeelbaar) {
     return NextResponse.json(
-      { error: `Sessie heeft status '${ctx.session.status}', kan niet evalueren.` },
+      { error: 'Er is geen afgerond gesprek om te beoordelen.' },
       { status: 409 }
     );
   }
